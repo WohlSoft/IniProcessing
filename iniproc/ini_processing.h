@@ -33,27 +33,32 @@ public:
         m_data(v.m_data),
         m_dataP(v.m_dataP) {}
 
-    IniProcessingVariant(int data):
+    IniProcessingVariant(short data):
         m_data(std::to_string(data)),
         m_dataP(nullptr) {}
 
-    IniProcessingVariant(int &data):
+    IniProcessingVariant(unsigned short data):
+        m_data(std::to_string(data)),
+        m_dataP(nullptr) {}
+
+    IniProcessingVariant(int data):
+        m_data(std::to_string(data)),
+        m_dataP(nullptr) {}
+    IniProcessingVariant(unsigned int data):
         m_data(std::to_string(data)),
         m_dataP(nullptr) {}
 
     IniProcessingVariant(long data):
         m_data(std::to_string(data)),
         m_dataP(nullptr) {}
-
-    IniProcessingVariant(long &data):
+    IniProcessingVariant(unsigned long data):
         m_data(std::to_string(data)),
         m_dataP(nullptr) {}
 
     IniProcessingVariant(long long data):
         m_data(std::to_string(data)),
         m_dataP(nullptr) {}
-
-    IniProcessingVariant(long long &data):
+    IniProcessingVariant(unsigned long long data):
         m_data(std::to_string(data)),
         m_dataP(nullptr) {}
 
@@ -61,15 +66,11 @@ public:
         m_data(std::to_string(data)),
         m_dataP(nullptr) {}
 
-    IniProcessingVariant(float &data):
-        m_data(std::to_string(data)),
-        m_dataP(nullptr) {}
-
     IniProcessingVariant(double data):
         m_data(std::to_string(data)),
         m_dataP(nullptr) {}
 
-    IniProcessingVariant(double &data):
+    IniProcessingVariant(long double data):
         m_data(std::to_string(data)),
         m_dataP(nullptr) {}
 
