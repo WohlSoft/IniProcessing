@@ -33,23 +33,43 @@ public:
         m_data(v.m_data),
         m_dataP(v.m_dataP) {}
 
-    IniProcessingVariant(const int &data):
+    IniProcessingVariant(int data):
         m_data(std::to_string(data)),
         m_dataP(nullptr) {}
 
-    IniProcessingVariant(const long &data):
+    IniProcessingVariant(int &data):
         m_data(std::to_string(data)),
         m_dataP(nullptr) {}
 
-    IniProcessingVariant(const long long &data):
+    IniProcessingVariant(long data):
         m_data(std::to_string(data)),
         m_dataP(nullptr) {}
 
-    IniProcessingVariant(const float &data):
+    IniProcessingVariant(long &data):
         m_data(std::to_string(data)),
         m_dataP(nullptr) {}
 
-    IniProcessingVariant(const double &data):
+    IniProcessingVariant(long long data):
+        m_data(std::to_string(data)),
+        m_dataP(nullptr) {}
+
+    IniProcessingVariant(long long &data):
+        m_data(std::to_string(data)),
+        m_dataP(nullptr) {}
+
+    IniProcessingVariant(float data):
+        m_data(std::to_string(data)),
+        m_dataP(nullptr) {}
+
+    IniProcessingVariant(float &data):
+        m_data(std::to_string(data)),
+        m_dataP(nullptr) {}
+
+    IniProcessingVariant(double data):
+        m_data(std::to_string(data)),
+        m_dataP(nullptr) {}
+
+    IniProcessingVariant(double &data):
         m_data(std::to_string(data)),
         m_dataP(nullptr) {}
 
@@ -102,11 +122,22 @@ public:
 
 class IniProcessing
 {
+public:
+    enum ErrCode
+    {
+        ERR_OK=0,
+        ERR_NOFILE,
+        ERR_SECTION_SYNTAX,
+        ERR_KEY_SYNTAX
+    };
+
+private:
     struct      params
     {
         std::string filePath;
         bool        opened;
         int         lineWithError;
+        ErrCode     errorCode;
         bool        modified;
         typedef     std::unordered_map<std::string, std::string> IniKeys;
         typedef     std::unordered_map<std::string, IniKeys> IniSections;
@@ -126,7 +157,7 @@ class IniProcessing
        stop on first error), -1 on file open error, or -2 on memory allocation
        error (only when INI_USE_STACK is zero).
     */
-    int handler(params::IniKeys* section, const char* name, const char* value);
+    //int handler(params::IniKeys* section, char *name, char *value);
 
     bool ini_parse(const char* filename);
 
