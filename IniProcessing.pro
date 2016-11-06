@@ -5,7 +5,9 @@ CONFIG += qt
 
 QT  += core
 
-#QMAKE_CXXFLAGS += -O3
+release:{
+QMAKE_CXXFLAGS += -Ofast
+}
 
 DESTDIR = $$PWD/bin
 

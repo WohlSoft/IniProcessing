@@ -10,9 +10,9 @@
 #endif
 
 /* Stop parsing on first error (default is to keep parsing). */
-#ifndef INI_STOP_ON_FIRST_ERROR
-#define INI_STOP_ON_FIRST_ERROR 0
-#endif
+//#ifndef INI_STOP_ON_FIRST_ERROR
+//#define INI_STOP_ON_FIRST_ERROR 1
+//#endif
 
 /* Maximum line length for any line in INI file. */
 #ifndef INI_MAX_LINE
@@ -33,214 +33,246 @@
 
 #include "../fileMapper/file_mapper.h"
 
+static const unsigned char utfbom[3] = {0xEF, 0xBB, 0xBF};
+
 /* Strip whitespace chars off end of given string, in place. Return s. */
-inline char* rstrip(char* s)
+inline char *rstrip(char *s)
 {
-    char* p = s + strlen(s);
-    while (p > s && isspace((unsigned char)(*--p)))
+    char *p = s + strlen(s);
+
+    while(p > s && isspace(static_cast<unsigned char>(*--p)))
         *p = '\0';
+
     return s;
 }
 
 /* Return pointer to first non-whitespace char in given string. */
-inline char* lskip(char* s)
+inline char *lskip(char *s)
 {
-    while (*s && isspace((unsigned char)(*s)))
+    while(*s && isspace(static_cast<unsigned char>(*s)))
         s++;
-    return (char*)s;
+
+    return reinterpret_cast<char *>(s);
 }
 
-inline char* lrtrim(char* s)
+inline char *lrtrim(char *s)
 {
-    while(*s && isspace((unsigned char)(*s)))
+    while(*s && isspace(static_cast<unsigned char>(*s)))
         s++;
-    char* p = s + strlen(s);
-    while (p > s && isspace((unsigned char)(*--p)))
+
+    char *p = s + strlen(s);
+
+    while(p > s && isspace(static_cast<unsigned char>(*--p)))
         *p = '\0';
+
     return s;
 }
 
 /* Return pointer to first char c or ';' comment in given string, or pointer to
    null at end of string if neither found. ';' must be prefixed by a whitespace
    character to register as a comment. */
-inline char* find_char_or_comment(char* s, char c)
+inline char *find_char_or_comment(char *s, char c)
 {
     int was_whitespace = 0;
-    while (*s && *s != c && !(was_whitespace && *s == ';')) {
-        was_whitespace = isspace((unsigned char)(*s));
+
+    while(*s && *s != c && !(was_whitespace && *s == ';'))
+    {
+        was_whitespace = isspace(static_cast<unsigned char>(*s));
         s++;
     }
+
     return s;
 }
 
 //Remove comment line from a tail of value
-inline void skipcomment(char* value)
+inline void skipcomment(char *value)
 {
-    int quoteDepth=0;
+    int quoteDepth = 0;
+
     while(*value)
     {
-        if( quoteDepth > 0 )
+        if(quoteDepth > 0)
         {
-            if(*value=='\\')
+            if(*value == '\\')
                 continue;
-            if(*value=='"')
+
+            if(*value == '"')
                 --quoteDepth;
         }
-        else
-        if(*value=='"')
-        {
+        else if(*value == '"')
             ++quoteDepth;
-        }
-        if((quoteDepth==0) && (*value==';'))
+
+        if((quoteDepth == 0) && (*value == ';'))
         {
-            *value='\0';
+            *value = '\0';
             break;
         }
+
         value++;
     }
 }
 
-inline bool memfgets(char* &line, char* data, long &pos, long &size)
+inline bool memfgets(char *&line, char *data, long &pos, long &size)
 {
-    char*  d = data+pos;
+    char  *d = data + pos;
     line = d;
+
     while(pos < size)
     {
         ++pos;
-        if( *d == '\n')
+
+        if(*d == '\n')
         {
-            if( pos>1 && (*(d-1)=='\r'))
-                *(d-1)='\0';
+            if(pos > 1 && (*(d - 1) == '\r'))
+                *(d - 1) = '\0';
+
             *d = '\0';
             break;
         }
+
         d++;
     }
-    return (pos<size);
+
+    return (pos < size);
 }
 
 /* See documentation in header file. */
-bool IniProcessing::ini_parse_file(char*data, long size)
+bool IniProcessing::ini_parse_file(char *data, long size)
 {
-    char* section = nullptr;
-    #if INI_ALLOW_MULTILINE
-    char* prev_name = nullptr;
-    #endif
-    char* start;
-    char* end;
-    char* name;
-    char* value;
+    char *section = nullptr;
+#if defined(INI_ALLOW_MULTILINE)
+    char *prev_name = nullptr;
+#endif
+    char *start;
+    char *end;
+    char *name;
+    char *value;
     int lineno = 0;
     int error = 0;
     long  pos = 0;
-    char* line;
-    params::IniKeys* recentKeys = nullptr;
+    char *line;
+    params::IniKeys *recentKeys = nullptr;
 
     /* Scan through file line by line */
     //while (fgets(line, INI_MAX_LINE, file) != NULL)
-    while( memfgets(line, data, pos, size) )
+    while(memfgets(line, data, pos, size))
     {
         lineno++;
         start = line;
-#if INI_ALLOW_BOM
-        if (lineno == 1 && (unsigned char)start[0] == 0xEF &&
-                           (unsigned char)start[1] == 0xBB &&
-                           (unsigned char)start[2] == 0xBF) {
+#if defined(INI_ALLOW_BOM)
+
+        if((lineno == 1) && (size >= 3) && (memcmp(start, utfbom, 3) == 0))
             start += 3;
-        }
+
 #endif
         start = lrtrim(start);
 
         if(!*start)//if empty line - skip it away!
             continue;
 
-        switch( *start )
+        switch(*start)
         {
-            case ';': case '#':
-                //if (*start == ';' || *start == '#') {
-                //    /* Per Python ConfigParser, allow '#' comments at start of line */
-                //}
-                continue;
-            case '[':
-                {
-                    /* A "[section]" line */
-                    end = find_char_or_comment(start + 1, ']');
-                    if (*end == ']') {
-                        *end = '\0';
-                        //strncpy0(section, start+1, MAX_SECTION);
-                        section = start+1;
-                        #if INI_ALLOW_MULTILINE
-                        prev_name = nullptr;
-                        #endif
-                        recentKeys = &m_params.iniData[section];
-                    }
-                    else if (!error) {
-                        /* No ']' found on section line */
-                        m_params.errorCode = ERR_SECTION_SYNTAX;
-                        error = lineno;
-                    }
-                }
-                break;
-            default:
-                {
-                    /* Not a comment, must be a name[=:]value pair */
-                    end = find_char_or_comment(start, '=');
-                    if (*end != '=') {
-                        end = find_char_or_comment(start, ':');
-                    }
-                    if (*end == '=' || *end == ':') {
-                        *end = '\0';
-                        name = rstrip(start);
-                        value = lskip(end + 1);
-                        end = find_char_or_comment(value, '\0');
-                        if (*end == ';')
-                            *end = '\0';
-                        rstrip(value);
+        case ';':
+        case '#':
+            //if (*start == ';' || *start == '#') {
+            //    /* Per Python ConfigParser, allow '#' comments at start of line */
+            //}
+            continue;
 
-                        #if INI_ALLOW_MULTILINE
-                        /* Valid name[=:]value pair found, call handler */
-                        strncpy0(prev_name, name, MAX_NAME);
-                        #endif
+        case '[':
+        {
+            /* A "[section]" line */
+            end = find_char_or_comment(start + 1, ']');
 
-                        {
-                            char*v = value;
-                            skipcomment(v);
-                            v = rstrip(v);
-                            if(!recentKeys)
-                                recentKeys = &m_params.iniData["General"];
-                        #ifdef INIDEBUG
-                            printf("-> [%s]; %s = %s\n", section, name, v);
-                        #endif
-                            (*recentKeys)[name] = v;
-                        }
-                    }
-                    else if (!error) {
-                        /* No '=' or ':' found on name[=:]value line */
-                        m_params.errorCode = ERR_KEY_SYNTAX;
-                        error = lineno;
-                    }
-                    break;
-                }
+            if(*end == ']')
+            {
+                *end = '\0';
+                //strncpy0(section, start+1, MAX_SECTION);
+                section = start + 1;
+#if defined(INI_ALLOW_MULTILINE)
+                prev_name = nullptr;
+#endif
+                recentKeys = &m_params.iniData[section];
+            }
+            else if(!error)
+            {
+                /* No ']' found on section line */
+                m_params.errorCode = ERR_SECTION_SYNTAX;
+                error = lineno;
+            }
         }
-#if INI_STOP_ON_FIRST_ERROR
-        if (error)
+        break;
+
+        default:
+        {
+            /* Not a comment, must be a name[=:]value pair */
+            end = find_char_or_comment(start, '=');
+
+            if(*end != '=')
+                end = find_char_or_comment(start, ':');
+
+            if(*end == '=' || *end == ':')
+            {
+                *end = '\0';
+                name = rstrip(start);
+                value = lskip(end + 1);
+                end = find_char_or_comment(value, '\0');
+
+                if(*end == ';')
+                    *end = '\0';
+
+                rstrip(value);
+#if defined(INI_ALLOW_MULTILINE)
+                /* Valid name[=:]value pair found, call handler */
+                strncpy0(prev_name, name, MAX_NAME);
+#endif
+                {
+                    char *v = value;
+                    skipcomment(v);
+                    v = rstrip(v);
+
+                    if(!recentKeys)
+                        recentKeys = &m_params.iniData["General"];
+
+#ifdef INIDEBUG
+                    printf("-> [%s]; %s = %s\n", section, name, v);
+#endif
+                    (*recentKeys)[name] = v;
+                }
+            }
+            else if(!error)
+            {
+                /* No '=' or ':' found on name[=:]value line */
+                m_params.errorCode = ERR_KEY_SYNTAX;
+                error = lineno;
+            }
+
             break;
+        }
+        }
+
+#if defined(INI_STOP_ON_FIRST_ERROR)
+
+        if(error)
+            break;
+
 #endif
     }
 
     m_params.lineWithError = error;
-    return (error==0);
+    return (error == 0);
 }
 
 /* See documentation in header file. */
-bool IniProcessing::ini_parse(const char* filename)
+bool IniProcessing::ini_parse(const char *filename)
 {
     PGE_FileMapper file(filename);
+
     if(!file.data)
         return -1;
 
-    char* tmp = (char*)malloc(file.size);
-    memcpy(tmp, file.data, file.size);
+    char *tmp = reinterpret_cast<char *>(malloc(static_cast<size_t>(file.size)));
+    memcpy(tmp, file.data, static_cast<size_t>(file.size));
     bool valid = ini_parse_file(tmp, file.size);
     free(tmp);
     return valid;
@@ -269,21 +301,25 @@ IniProcessing::IniProcessing(const IniProcessing &ip) :
 bool IniProcessing::open(const std::string &iniFileName)
 {
     std::setlocale(LC_NUMERIC, "C");
+
     if(!iniFileName.empty())
     {
         close();
         m_params.errorCode = ERR_OK;
         m_params.filePath  = iniFileName;
         bool res = parse();
-        #ifdef INIDEBUG
+#ifdef INIDEBUG
+
         if(res)
             printf("\n==========WOOHOO!!!==============\n\n");
         else
             printf("\n==========OOOUCH!!!==============\n\n");
-        #endif
+
+#endif
         m_params.opened = res;
         return res;
     }
+
     m_params.errorCode = ERR_NOFILE;
     return false;
 }
@@ -312,6 +348,7 @@ bool IniProcessing::beginGroup(const std::string &groupName)
         return false;
 
     params::IniSections::iterator e = m_params.iniData.find(groupName);
+
     if(e == m_params.iniData.end())
         return false;
 
@@ -355,10 +392,10 @@ IniProcessingVariant IniProcessing::value(std::string key, const IniProcessingVa
         return defVal;
 
     params::IniKeys::iterator e = m_params.currentGroup->find(key);
+
     if(e == m_params.currentGroup->end())
         return defVal;
 
     std::string &k = e->second;
-
     return IniProcessingVariant(&k);
 }
