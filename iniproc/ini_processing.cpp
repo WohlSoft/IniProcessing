@@ -5,9 +5,9 @@
 #endif
 
 /* Nonzero to use stack, zero to use heap (malloc/free). */
-#ifndef INI_USE_STACK
-#define INI_USE_STACK 1
-#endif
+//#ifndef INI_USE_STACK
+//#define INI_USE_STACK 1
+//#endif
 
 /* Stop parsing on first error (default is to keep parsing). */
 //#ifndef INI_STOP_ON_FIRST_ERROR
@@ -15,21 +15,22 @@
 //#endif
 
 /* Maximum line length for any line in INI file. */
-#ifndef INI_MAX_LINE
-#define INI_MAX_LINE 500
-#endif
+//#ifndef INI_MAX_LINE
+//#define INI_MAX_LINE 500
+//#endif
 
 #include "ini_processing.h"
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #ifdef _WIN32
 #include <windows.h>
 #endif
-#if !INI_USE_STACK
-#include <stdlib.h>
-#endif
-#define MAX_SECTION 100
-#define MAX_NAME 100
+//#if !defined(INI_USE_STACK)
+//#include <stdlib.h>
+//#endif
+//#define MAX_SECTION 100
+//#define MAX_NAME 100
 
 #include "../fileMapper/file_mapper.h"
 
@@ -241,7 +242,6 @@ bool IniProcessing::ini_parse_file(char *data, long size)
             if(*end == ']')
             {
                 *end = '\0';
-                //strncpy0(section, start+1, MAX_SECTION);
                 section = start + 1;
 #if defined(INI_ALLOW_MULTILINE)
                 prev_name = nullptr;
@@ -277,10 +277,10 @@ bool IniProcessing::ini_parse_file(char *data, long size)
                     *end = '\0';
 
                 rstrip(value);
-#if defined(INI_ALLOW_MULTILINE)
-                /* Valid name[=:]value pair found, call handler */
-                strncpy0(prev_name, name, MAX_NAME);
-#endif
+                //#if defined(INI_ALLOW_MULTILINE)
+                //  /* Valid name[=:]value pair found, call handler */
+                //  strncpy0(prev_name, name, MAX_NAME);
+                //#endif
                 {
                     char *v = value;
                     skipcomment(v);
