@@ -35,12 +35,52 @@
 
 static const unsigned char utfbom[3] = {0xEF, 0xBB, 0xBF};
 
+enum { Space = 0x01, Special = 0x02, INIParamEq = 0x04 };
+
+static const unsigned char charTraits[256] =
+{
+    // Space: '\t', '\n', '\r', ' '
+    // Special: '\n', '\r', '"', ';', '=', '\\'
+    // INIParamEq: ':', '='
+
+    0, 0, 0, 0, 0, 0, 0, 0, 0, Space, Space | Special, 0, 0, Space | Special,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, Space, 0, Special,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, INIParamEq,
+    Special, 0, Special | INIParamEq, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, Special, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+};
+
+#if 0//for speed comparison who faster - macro or inline function. Seems speeds are same
+#define IS_SPACE(c) (charTraits[static_cast<unsigned char>(c)] & Space)
+#define IS_SPECIAL(c) (charTraits[static_cast<unsigned char>(c)] & Special)
+#define IS_INIEQUAL(c) (charTraits[static_cast<unsigned char>(c)] & INIParamEq)
+#else
+inline unsigned char IS_SPACE(char &c)
+{
+    return (charTraits[static_cast<unsigned char>(c)] & Space);
+}
+inline unsigned char IS_SPECIAL(char &c)
+{
+    return (charTraits[static_cast<unsigned char>(c)] & Special);
+}
+inline unsigned char IS_INIEQUAL(char &c)
+{
+    return (charTraits[static_cast<unsigned char>(c)] & INIParamEq);
+}
+#endif
+
 /* Strip whitespace chars off end of given string, in place. Return s. */
 inline char *rstrip(char *s)
 {
     char *p = s + strlen(s);
 
-    while(p > s && isspace(static_cast<unsigned char>(*--p)))
+    while(p > s && IS_SPACE(*--p))
         *p = '\0';
 
     return s;
@@ -49,7 +89,7 @@ inline char *rstrip(char *s)
 /* Return pointer to first non-whitespace char in given string. */
 inline char *lskip(char *s)
 {
-    while(*s && isspace(static_cast<unsigned char>(*s)))
+    while(*s && IS_SPACE(*s))
         s++;
 
     return reinterpret_cast<char *>(s);
@@ -57,12 +97,12 @@ inline char *lskip(char *s)
 
 inline char *lrtrim(char *s)
 {
-    while(*s && isspace(static_cast<unsigned char>(*s)))
+    while(*s && IS_SPACE(*s))
         s++;
 
     char *p = s + strlen(s);
 
-    while(p > s && isspace(static_cast<unsigned char>(*--p)))
+    while(p > s && IS_SPACE(*--p))
         *p = '\0';
 
     return s;
@@ -77,12 +117,26 @@ inline char *find_char_or_comment(char *s, char c)
 
     while(*s && *s != c && !(was_whitespace && *s == ';'))
     {
-        was_whitespace = isspace(static_cast<unsigned char>(*s));
+        was_whitespace = IS_SPACE(*s);
         s++;
     }
 
     return s;
 }
+
+inline char *find_inieq_or_comment(char *s)
+{
+    int was_whitespace = 0;
+
+    while(*s && (!IS_INIEQUAL(*s)) && !(was_whitespace && *s == ';'))
+    {
+        was_whitespace = IS_SPACE(*s);
+        s++;
+    }
+
+    return s;
+}
+
 
 //Remove comment line from a tail of value
 inline void skipcomment(char *value)
@@ -206,12 +260,13 @@ bool IniProcessing::ini_parse_file(char *data, long size)
         default:
         {
             /* Not a comment, must be a name[=:]value pair */
-            end = find_char_or_comment(start, '=');
+            //end = find_char_or_comment(start, '=');
+            end = find_inieq_or_comment(start);
 
-            if(*end != '=')
-                end = find_char_or_comment(start, ':');
+            //if(*end != '=')
+            //    end = find_char_or_comment(start, ':');
 
-            if(*end == '=' || *end == ':')
+            if(IS_INIEQUAL(*end) /**end == '=' || *end == ':'*/)
             {
                 *end = '\0';
                 name = rstrip(start);
