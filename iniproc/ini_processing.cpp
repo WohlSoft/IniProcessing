@@ -114,7 +114,7 @@ inline char *lrtrim(char *s)
    character to register as a comment. */
 inline char *find_char_or_comment(char *s, char c)
 {
-    int was_whitespace = 0;
+    unsigned char was_whitespace = 0;
 
     while(*s && *s != c && !(was_whitespace && *s == ';'))
     {
@@ -127,7 +127,7 @@ inline char *find_char_or_comment(char *s, char c)
 
 inline char *find_inieq_or_comment(char *s)
 {
-    int was_whitespace = 0;
+    unsigned char was_whitespace = 0;
 
     while(*s && (!IS_INIEQUAL(*s)) && !(was_whitespace && *s == ';'))
     {
@@ -142,7 +142,7 @@ inline char *find_inieq_or_comment(char *s)
 //Remove comment line from a tail of value
 inline void skipcomment(char *value)
 {
-    int quoteDepth = 0;
+    unsigned char quoteDepth = 0;
 
     while(*value)
     {
@@ -167,28 +167,29 @@ inline void skipcomment(char *value)
     }
 }
 
-inline bool memfgets(char *&line, char *data, long &pos, long &size)
+inline bool memfgets(char *&line, char *data, char *&pos, char *end)
 {
-    char  *d = data + pos;
-    line = d;
+    line = pos;
 
-    while(pos < size)
+    while(pos != end)
     {
-        ++pos;
-
-        if(*d == '\n')
+        if(*pos == '\n')
         {
-            if(pos > 1 && (*(d - 1) == '\r'))
-                *(d - 1) = '\0';
+            if((pos > data) && (*(pos - 1) == '\r'))
+                *((pos++) - 1) = '\0';
+            else
+                *(pos++) = '\0';
 
-            *d = '\0';
             break;
         }
 
-        d++;
+        ++pos;
     }
 
-    return (pos < size);
+    return (pos != line);
+    //EOF is a moment when position wasn't changed.
+    //If do check "pos != end", will be an inability to read last line.
+    //this logic allows detect true EOF when line is really eof
 }
 
 /* See documentation in header file. */
@@ -204,13 +205,14 @@ bool IniProcessing::ini_parse_file(char *data, long size)
     char *value;
     int lineno = 0;
     int error = 0;
-    long  pos = 0;
     char *line;
+    char *pos_end = data + size;
+    char *pos_cur = data;
     params::IniKeys *recentKeys = nullptr;
 
     /* Scan through file line by line */
     //while (fgets(line, INI_MAX_LINE, file) != NULL)
-    while(memfgets(line, data, pos, size))
+    while(memfgets(line, data, pos_cur, pos_end))
     {
         lineno++;
         start = line;
@@ -326,8 +328,9 @@ bool IniProcessing::ini_parse(const char *filename)
     if(!file.data)
         return -1;
 
-    char *tmp = reinterpret_cast<char *>(malloc(static_cast<size_t>(file.size)));
+    char *tmp = reinterpret_cast<char *>(malloc(static_cast<size_t>(file.size + 1)));
     memcpy(tmp, file.data, static_cast<size_t>(file.size));
+    *(tmp + file.size) = '\0';//null terminate last line
     bool valid = ini_parse_file(tmp, file.size);
     free(tmp);
     return valid;

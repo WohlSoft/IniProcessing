@@ -8,6 +8,9 @@ QT  += core
 release:{
 QMAKE_CXXFLAGS += -Ofast
 }
+#QMAKE_CFLAGS += -march=native
+#QMAKE_CXXFLAGS += -march=native
+#QMAKE_CXXFLAGS += -static-libgcc -static-libstdc++
 
 DESTDIR = $$PWD/bin
 
