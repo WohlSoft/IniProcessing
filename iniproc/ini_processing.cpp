@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 #ifdef _WIN32
 #include <windows.h>
 #endif
@@ -193,7 +194,7 @@ inline bool memfgets(char *&line, char *data, char *&pos, char *end)
 }
 
 /* See documentation in header file. */
-bool IniProcessing::ini_parse_file(char *data, long size)
+bool IniProcessing::ini_parse_file(char *data, size_t size)
 {
     char *section = nullptr;
 #if defined(INI_ALLOW_MULTILINE)
@@ -323,15 +324,41 @@ bool IniProcessing::ini_parse_file(char *data, long size)
 /* See documentation in header file. */
 bool IniProcessing::ini_parse(const char *filename)
 {
+    bool valid = true;
+    char *tmp = nullptr;
+#if 0 //By mystical reasons, reading whole file form fread() is faster than mapper :-P
     PGE_FileMapper file(filename);
 
     if(!file.data)
         return -1;
 
-    char *tmp = reinterpret_cast<char *>(malloc(static_cast<size_t>(file.size + 1)));
+    tmp = reinterpret_cast<char *>(malloc(static_cast<size_t>(file.size + 1)));
     memcpy(tmp, file.data, static_cast<size_t>(file.size));
     *(tmp + file.size) = '\0';//null terminate last line
-    bool valid = ini_parse_file(tmp, file.size);
+    valid = ini_parse_file(tmp, static_cast<size_t>(file.size));
+#else
+    FILE *cFile = fopen64(filename, "rb");
+
+    if(!cFile)
+        return false;
+
+    fseek(cFile, 0, SEEK_END);
+    size_t size = static_cast<size_t>(ftell(cFile));
+    fseek(cFile, 0, SEEK_SET);
+    tmp = reinterpret_cast<char *>(malloc(static_cast<size_t>(/*file.size*/ size + 1)));
+
+    if(fread(tmp, 1, size, cFile) != size)
+        valid = false;
+
+    fclose(cFile);
+
+    if(valid)
+    {
+        *(tmp + /*file.size*/size) = '\0';//null terminate last line
+        valid = ini_parse_file(tmp, size/*file.size*/);
+    }
+
+#endif
     free(tmp);
     return valid;
 }
