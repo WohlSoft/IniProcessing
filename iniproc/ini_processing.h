@@ -3,195 +3,10 @@
 
 #include <string>
 #include <cstring>
+#include <cstdlib>
 #include <unordered_map>
 
-class IniProcessingVariant
-{
-        std::string  m_data;
-        std::string *m_dataP;
-        inline std::string &data()
-        {
-            if(m_dataP)
-                return *m_dataP;
-            else
-                return m_data;
-        }
-    public:
-        IniProcessingVariant():
-            m_data(""),
-            m_dataP(nullptr) {}
-
-        IniProcessingVariant(const std::string &data):
-            m_data(data),
-            m_dataP(nullptr) {}
-        IniProcessingVariant(const char *data):
-            m_data(data),
-            m_dataP(nullptr) {}
-        IniProcessingVariant(std::string *dataPointer):
-            m_data(""),
-            m_dataP(dataPointer) {}
-        IniProcessingVariant(const IniProcessingVariant &v):
-            m_data(v.m_data),
-            m_dataP(v.m_dataP) {}
-
-        IniProcessingVariant(char data):
-            m_data(std::to_string(data)),
-            m_dataP(nullptr) {}
-
-        IniProcessingVariant(unsigned char data):
-            m_data(std::to_string(data)),
-            m_dataP(nullptr) {}
-
-        IniProcessingVariant(bool data):
-            m_data(std::to_string(data)),
-            m_dataP(nullptr) {}
-
-        IniProcessingVariant(short data):
-            m_data(std::to_string(data)),
-            m_dataP(nullptr) {}
-
-        IniProcessingVariant(unsigned short data):
-            m_data(std::to_string(data)),
-            m_dataP(nullptr) {}
-
-        IniProcessingVariant(int data):
-            m_data(std::to_string(data)),
-            m_dataP(nullptr) {}
-        IniProcessingVariant(unsigned int data):
-            m_data(std::to_string(data)),
-            m_dataP(nullptr) {}
-
-        IniProcessingVariant(long data):
-            m_data(std::to_string(data)),
-            m_dataP(nullptr) {}
-        IniProcessingVariant(unsigned long data):
-            m_data(std::to_string(data)),
-            m_dataP(nullptr) {}
-
-        IniProcessingVariant(long long data):
-            m_data(std::to_string(data)),
-            m_dataP(nullptr) {}
-        IniProcessingVariant(unsigned long long data):
-            m_data(std::to_string(data)),
-            m_dataP(nullptr) {}
-
-        IniProcessingVariant(float data):
-            m_data(std::to_string(data)),
-            m_dataP(nullptr) {}
-
-        IniProcessingVariant(double data):
-            m_data(std::to_string(data)),
-            m_dataP(nullptr) {}
-
-        IniProcessingVariant(long double data):
-            m_data(std::to_string(data)),
-            m_dataP(nullptr) {}
-
-        bool isNull()
-        {
-            return (m_data.empty() && !m_dataP);
-        }
-
-        bool isValid()
-        {
-            return ((!m_data.empty()) || (static_cast<std::string *>(m_dataP)));
-        }
-
-        std::string toString()
-        {
-            std::string out = data();
-
-            if((out.size() > 2) && (out[0] == '"'))
-                out.erase(0, 1);
-
-            if((out.size() > 1) && (out[out.size() - 1] == '"'))
-                out.erase((out.size() - 1), 1);
-
-            return out;
-        }
-
-        bool toBool()
-        {
-            size_t i = 0;
-            size_t ss = std::min(static_cast<size_t>(4ul), data().size());
-            char buff[4] = {0, 0, 0, 0};
-            const char *pbufi = data().c_str();
-            char *pbuff = buff;
-
-            for(; i < ss; i++)
-                (*pbuff++) = static_cast<char>(std::tolower(*pbufi++));
-
-            if(ss < 4)
-            {
-                if(ss == 0)
-                    return false;
-
-                if(ss == 1)
-                    return (buff[0] == '1');
-
-                try
-                {
-                    long num = std::strtol(buff, 0, 0);
-                    return num != 0l;
-                }
-                catch(...)
-                {
-                    return (std::memcmp(buff, "yes", 3) == 0) ||
-                           (std::memcmp(buff, "on", 2) == 0);
-                }
-            }
-            else
-                return (std::memcmp(buff, "true", 4) == 0);
-
-            try
-            {
-                long num = std::strtol(buff, 0, 0);
-                return num != 0l;
-            }
-            catch(...)
-            {
-                return false;
-            }
-        }
-
-        int toInt()
-        {
-            return std::atoi(data().c_str());
-        }
-        unsigned int toUInt()
-        {
-            return static_cast<unsigned int>(std::strtoul(data().c_str(), nullptr, 0));
-        }
-
-        long toLong()
-        {
-            return std::atol(data().c_str());
-        }
-        unsigned long toULong()
-        {
-            return std::strtoul(data().c_str(), nullptr, 0);
-        }
-
-        long long toLongLong()
-        {
-            return std::atoll(data().c_str());
-        }
-        unsigned long long toULongLong()
-        {
-            return std::strtoull(data().c_str(), nullptr, 0);
-        }
-
-        float toFloat()
-        {
-            return float(std::atof(data().c_str()));
-        }
-
-        double toDouble()
-        {
-            return std::atof(data().c_str());
-        }
-};
-
+#include "ini_processing_variant.h"
 
 class IniProcessing
 {
@@ -201,7 +16,8 @@ class IniProcessing
             ERR_OK = 0,
             ERR_NOFILE,
             ERR_SECTION_SYNTAX,
-            ERR_KEY_SYNTAX
+            ERR_KEY_SYNTAX,
+            ERR_NO_MEMORY
         };
 
     private:
@@ -234,15 +50,34 @@ class IniProcessing
 
         bool ini_parse(const char *filename);
 
+        bool ini_parseMemory(char *mem, size_t size);
+
         /* Same as ini_parse(), but takes a FILE* instead of filename. This doesn't
            close the file when it's finished -- the caller must do that. */
         bool ini_parse_file(char *data, size_t size);
+
+        inline params::IniKeys::iterator readHelper(const char *key, bool &ok)
+        {
+            if(!m_params.opened)
+                return params::IniKeys::iterator();
+
+            if(!m_params.currentGroup)
+                return params::IniKeys::iterator();
+
+            params::IniKeys::iterator e = m_params.currentGroup->find(key);
+
+            if(e != m_params.currentGroup->end())
+                ok = true;
+
+            return e;
+        }
 
     public:
         IniProcessing();
         IniProcessing(const std::string &iniFileName, int dummy = 0);
         IniProcessing(const IniProcessing &ip);
         bool open(const std::string &iniFileName);
+        bool openMem(char *memory, size_t size);
         void close();
         int  lineWithError();
         bool isOpened();
@@ -252,7 +87,22 @@ class IniProcessing
         bool hasKey(const std::string &keyName);
         void endGroup();
 
-        IniProcessingVariant value(std::string key, const IniProcessingVariant &defVal = IniProcessingVariant());
+        void read(const char *key, bool &dest, bool defVal);
+        void read(const char *key, unsigned char &dest, unsigned char defVal);
+        void read(const char *key, char &dest, char defVal);
+        void read(const char *key, unsigned short &dest, unsigned short defVal);
+        void read(const char *key, short &dest, short defVal);
+        void read(const char *key, unsigned int &dest, unsigned int defVal);
+        void read(const char *key, int &dest, int defVal);
+        void read(const char *key, unsigned long &dest, unsigned long defVal);
+        void read(const char *key, long &dest, long defVal);
+        void read(const char *key, unsigned long long &dest, unsigned long long defVal);
+        void read(const char *key, long long &dest, long long defVal);
+        void read(const char *key, float &dest, float defVal);
+        void read(const char *key, double &dest, double defVal);
+        void read(const char *key, std::string &dest, const std::string &defVal);
+
+        IniProcessingVariant value(const char *key, const IniProcessingVariant &defVal = IniProcessingVariant());
 };
 
 #endif // INIPROCESSING_H

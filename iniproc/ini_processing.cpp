@@ -33,7 +33,9 @@
 //#define MAX_SECTION 100
 //#define MAX_NAME 100
 
+#ifdef USE_FILE_MAPPER
 #include "../fileMapper/file_mapper.h"
+#endif
 
 static const unsigned char utfbom[3] = {0xEF, 0xBB, 0xBF};
 
@@ -326,21 +328,48 @@ bool IniProcessing::ini_parse(const char *filename)
 {
     bool valid = true;
     char *tmp = nullptr;
-#if 0 //By mystical reasons, reading whole file form fread() is faster than mapper :-P
+#ifdef USE_FILE_MAPPER
+    //By mystical reasons, reading whole file form fread() is faster than mapper :-P
     PGE_FileMapper file(filename);
 
     if(!file.data)
+    {
+        m_params.errorCode = ERR_NOFILE;
         return -1;
+    }
 
     tmp = reinterpret_cast<char *>(malloc(static_cast<size_t>(file.size + 1)));
+
+    if(!tmp)
+    {
+        m_params.errorCode = ERR_NO_MEMORY;
+        return false;
+    }
+
     memcpy(tmp, file.data, static_cast<size_t>(file.size));
     *(tmp + file.size) = '\0';//null terminate last line
     valid = ini_parse_file(tmp, static_cast<size_t>(file.size));
 #else
+#ifdef _WIN32
+    std::wstring dest;
+    dest.resize(filename);
+    int newSize = MultiByteToWideChar(CP_UTF8,
+                                      0,
+                                      filename,
+                                      std::strlen(filename),
+                                      (wchar_t *)dest.c_str(),
+                                      source.length());
+    dest.resize(newSize);
+    FILE *cFile = _wfopen(dest.c_str(), L"rb");
+#else
     FILE *cFile = fopen64(filename, "rb");
+#endif
 
     if(!cFile)
+    {
+        m_params.errorCode = ERR_NOFILE;
         return false;
+    }
 
     fseek(cFile, 0, SEEK_END);
     size_t size = static_cast<size_t>(ftell(cFile));
@@ -360,6 +389,24 @@ bool IniProcessing::ini_parse(const char *filename)
 
 #endif
     free(tmp);
+    return valid;
+}
+
+bool IniProcessing::ini_parseMemory(char *mem, size_t size)
+{
+    bool valid = true;
+    char *tmp = nullptr;
+    tmp = reinterpret_cast<char *>(malloc(size + 1));
+
+    if(!tmp)
+    {
+        m_params.errorCode = ERR_NO_MEMORY;
+        return false;
+    }
+
+    memcpy(tmp, mem, static_cast<size_t>(size));
+    *(tmp + size) = '\0';//null terminate last line
+    valid = ini_parse_file(tmp, size);
     return valid;
 }
 
@@ -401,6 +448,24 @@ bool IniProcessing::open(const std::string &iniFileName)
             printf("\n==========OOOUCH!!!==============\n\n");
 
 #endif
+        m_params.opened = res;
+        return res;
+    }
+
+    m_params.errorCode = ERR_NOFILE;
+    return false;
+}
+
+bool IniProcessing::openMem(char *memory, size_t size)
+{
+    std::setlocale(LC_NUMERIC, "C");
+
+    if((memory != nullptr) && (size > 0))
+    {
+        close();
+        m_params.errorCode = ERR_OK;
+        m_params.filePath.clear();
+        bool res = ini_parseMemory(memory, size);
         m_params.opened = res;
         return res;
     }
@@ -468,17 +533,272 @@ void IniProcessing::endGroup()
     m_params.currentGroup = nullptr;
 }
 
-IniProcessingVariant IniProcessing::value(std::string key, const IniProcessingVariant &defVal)
+void IniProcessing::read(const char *key, bool &dest, bool defVal)
 {
-    if(!m_params.opened)
-        return defVal;
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
 
-    if(!m_params.currentGroup)
-        return defVal;
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
 
-    params::IniKeys::iterator e = m_params.currentGroup->find(key);
+    std::string &k = e->second;
+    size_t i = 0;
+    size_t ss = std::min(static_cast<size_t>(4ul), k.size());
+    char buff[4] = {0, 0, 0, 0};
+    const char *pbufi = k.c_str();
+    char *pbuff = buff;
 
-    if(e == m_params.currentGroup->end())
+    for(; i < ss; i++)
+        (*pbuff++) = static_cast<char>(std::tolower(*pbufi++));
+
+    if(ss < 4)
+    {
+        if(ss == 0)
+        {
+            dest = false;
+            return;
+        }
+
+        if(ss == 1)
+        {
+            dest = (buff[0] == '1');
+            return;
+        }
+
+        try
+        {
+            long num = std::strtol(buff, 0, 0);
+            dest = num != 0l;
+            return;
+        }
+        catch(...)
+        {
+            dest = (std::memcmp(buff, "yes", 3) == 0) ||
+                   (std::memcmp(buff, "on", 2) == 0);
+            return;
+        }
+    }
+
+    if(std::memcmp(buff, "true", 4) == 0)
+    {
+        dest = true;
+        return;
+    }
+
+    try
+    {
+        long num = std::strtol(buff, 0, 0);
+        dest = num != 0l;
+        return;
+    }
+    catch(...)
+    {
+        dest = false;
+        return;
+    }
+}
+
+void IniProcessing::read(const char *key, unsigned char &dest, unsigned char defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    std::string &k = e->second;
+
+    if(k.size() >= 1)
+        dest = static_cast<unsigned char>(k[0]);
+    else
+        dest = defVal;
+}
+
+void IniProcessing::read(const char *key, char &dest, char defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    std::string &k = e->second;
+
+    if(k.size() >= 1)
+        dest = k[0];
+    else
+        dest = defVal;
+}
+
+void IniProcessing::read(const char *key, unsigned short &dest, unsigned short defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    dest = static_cast<unsigned short>(std::strtoul(e->second.c_str(), nullptr, 0));
+}
+
+void IniProcessing::read(const char *key, short &dest, short defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    dest = static_cast<short>(std::strtol(e->second.c_str(), nullptr, 0));
+}
+
+void IniProcessing::read(const char *key, unsigned int &dest, unsigned int defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    dest = static_cast<unsigned int>(std::strtoul(e->second.c_str(), nullptr, 0));
+}
+
+void IniProcessing::read(const char *key, int &dest, int defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    dest = static_cast<int>(std::strtol(e->second.c_str(), nullptr, 0));
+}
+
+void IniProcessing::read(const char *key, unsigned long &dest, unsigned long defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    dest = std::strtoul(e->second.c_str(), nullptr, 0);
+}
+
+void IniProcessing::read(const char *key, long &dest, long defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    dest = std::strtol(e->second.c_str(), nullptr, 0);
+}
+
+void IniProcessing::read(const char *key, unsigned long long &dest, unsigned long long defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    dest = std::strtoull(e->second.c_str(), nullptr, 0);
+}
+
+void IniProcessing::read(const char *key, long long &dest, long long defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    dest = std::strtoll(e->second.c_str(), nullptr, 0);
+}
+
+void IniProcessing::read(const char *key, float &dest, float defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    dest = std::strtof(e->second.c_str(), nullptr);
+}
+
+void IniProcessing::read(const char *key, double &dest, double defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    dest = std::strtod(e->second.c_str(), nullptr);
+}
+
+void IniProcessing::read(const char *key, std::string &dest, const std::string &defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    dest = e->second;
+}
+
+IniProcessingVariant IniProcessing::value(const char *key, const IniProcessingVariant &defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
         return defVal;
 
     std::string &k = e->second;

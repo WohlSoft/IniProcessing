@@ -326,6 +326,246 @@ void testIniParser(std::string iniFile, TestValues1<String> &g_testData, bool de
 #undef END
 }
 
+void testIniParserNEW(std::string iniFile, TestValues1<std::string> &g_testData, bool deepTestOfBig = false)
+{
+    std::clock_t begin = 0;
+    std::clock_t end = 0;
+    double       elapsed_secs = 0.0;
+#define BEGIN()     begin   = std::clock();
+#define END(tmsg)   end     = std::clock();\
+    elapsed_secs = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;\
+    tests.push_back({tmsg, elapsed_secs});
+    /************************************************************/
+    BEGIN()
+    /*IniProcessing*/
+    IniProcessing ini(iniFile.c_str(), QSettings::IniFormat);
+    END("Time to init");
+
+    if(deepTestOfBig)
+    {
+        static const char *chrs[] =
+        {
+            "character-1",
+            "character-2",
+            "character-3",
+            "character-4",
+            "character-5"
+        };
+        static const char *chrs_world[] =
+        {
+            "character-1-world",
+            "character-2-world",
+            "character-3-world",
+            "character-4-world",
+            "character-5-world"
+        };
+        static const char *chrs_phys[3][5] =
+        {
+            {
+                "character-1-env-common-air",
+                "character-2-env-common-air",
+                "character-3-env-common-air",
+                "character-4-env-common-air",
+                "character-5-env-common-air"
+            },
+            {
+                "character-1-env-common-water",
+                "character-2-env-common-water",
+                "character-3-env-common-water",
+                "character-4-env-common-water",
+                "character-5-env-common-water"
+            },
+            {
+                "character-1-env-common-quicksand",
+                "character-2-env-common-quicksand",
+                "character-3-env-common-quicksand",
+                "character-4-env-common-quicksand",
+                "character-5-env-common-quicksand"
+            }
+        };
+        std::string dummyString;
+        double dummyDouble;
+        unsigned int dummyUint;
+        int     dummySint;
+        bool    dummyBool;
+
+        for(int i = 0; i < 5; i++)
+        {
+            BEGIN()
+            ini.beginGroup(chrs[i]);
+            END("Time to begin");
+            BEGIN()
+            ini.read("name", g_testData.whoIAm, "Dr. Zhopa");
+            END("Time to take Str");
+            BEGIN()
+            ini.read("fail-effect-gravity", g_testData.failEffectGravity, 1.3);
+            END("Time to take double");
+            BEGIN()
+            ini.read("sprite-folder", g_testData.myFolderIs, "wat???");
+            END("Time to take Str");
+            BEGIN()
+            ini.endGroup();
+            END("Time to end");
+        }
+
+        for(int i = 0; i < 5; i++)
+        {
+            BEGIN()
+            ini.beginGroup(chrs_world[i]);
+            END("Time to begin");
+            BEGIN()
+            ini.read("sprite-name", dummyString, "Dr. Zhopa");
+            END("Time to take Str");
+            BEGIN()
+            ini.read("frames-total", dummyUint, 0);
+            END("Time to take UInt");
+            BEGIN()
+            ini.read("frames-speed", dummyUint, 0);
+            END("Time to take UInt");
+            BEGIN()
+            ini.read("offset-y", dummySint, 0);
+            END("Time to take UInt");
+            BEGIN()
+            ini.read("frames-down", dummyString, "Dr. Zhopa");
+            END("Time to take Str");
+            BEGIN()
+            ini.read("frames-right", dummyString, "Dr. Zhopa");
+            END("Time to take Str");
+            BEGIN()
+            ini.read("frames-left", dummyString, "Dr. Zhopa");
+            END("Time to take Str");
+            BEGIN()
+            ini.read("frames-up", dummyString, "Dr. Zhopa");
+            END("Time to take Str");
+            BEGIN()
+            ini.endGroup();
+            END("Time to end");
+        }
+
+        for(int i = 0; i < 3; i++)
+            for(int j = 0; j < 5; j++)
+            {
+                BEGIN()
+                ini.beginGroup(chrs_phys[i][j]);
+                END("Time to begin");
+                BEGIN()
+                ini.read("walk_force", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("run_force", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("decelerate_stop", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("decelerate_turn", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("decelerate_air", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("slippery_c", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("gravity_accel", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("gravity_scale", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("velocity_jump", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("velocity_jump_bounce", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("velocity_jump_spring", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("velocity_jump_c", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("jump_time", dummyUint, 12u);
+                END("Time to take UInt");
+                BEGIN()
+                ini.read("jump_time_spring", dummyUint, 12);
+                END("Time to take UInt");
+                BEGIN()
+                ini.read("velocity_climb_x", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("velocity_climb_y_up", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("velocity_climb_y_down", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("MaxSpeed_walk", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("MaxSpeed_run", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("MaxSpeed_up", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("MaxSpeed_down", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("zero_speed_y_on_enter", dummyBool, false);
+                END("Time to take Bool");
+                BEGIN()
+                ini.read("slow_up_speed_y_coeff", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.read("slow_speed_x_on_enter", dummyBool, false);
+                END("Time to take Bool");
+                BEGIN()
+                ini.read("slow_speed_x_coeff", dummyDouble, 1.3);
+                END("Time to take double");
+                BEGIN()
+                ini.endGroup();
+                END("Time to end");
+            }
+    }
+    else
+    {
+        BEGIN()
+        ini.beginGroup("character-3");
+        END("Time to begin");
+        BEGIN()
+        ini.read("name", g_testData.whoIAm, "Dr. Zhopa");
+        END("Time to take Str");
+        BEGIN()
+        ini.read("fail-effect-gravity", g_testData.failEffectGravity, 1.3);
+        END("Time to take double");
+        BEGIN()
+        ini.read("sprite-folder", g_testData.myFolderIs, "wat???");
+        END("Time to take Str");
+        BEGIN()
+        ini.endGroup();
+        END("Time to end");
+        BEGIN()
+        ini.beginGroup("character-3-env-common-air");
+        END("Time to begin 2");
+        BEGIN()
+        ini.read("walk_force", g_testData.ican, 0.0);
+        END("Time to take double");
+        BEGIN()
+        ini.read("gravity_accelX", g_testData.gravityAccelX, "");
+        END("Time to take Str");
+        BEGIN()
+        ini.read("gravity_accel", g_testData.gravityAccel, 0.0);
+        END("Time to take Double");
+        BEGIN()
+        ini.endGroup();
+        END("Time to end 2");
+    }
+
+    /************************************************************/
+#undef BEGIN
+#undef END
+}
 
 int main(int argc, char **argv)
 {
@@ -379,6 +619,22 @@ int main(int argc, char **argv)
                elapsed_secs2);
         g_testDataM.spit();
         g_testDataQ.spit();
+    }
+    //
+    //Test big INI (full, new functions)
+    {
+        tests2 = tests1;//compare with old functions
+        tests.clear();
+        begin   = std::clock();
+        testIniParserNEW("../example-big-2.ini", g_testDataM, true);
+        end     = std::clock();
+        elapsed_secs1 = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;
+        tests1 = tests;
+        dumpTests();
+        printf("\nTotal time (big ini, full with new functions): My (new): %f, My (old): %f\n\n",
+               elapsed_secs1,
+               elapsed_secs2);
+        g_testDataM.spit();
     }
     //
     //Test middle INI

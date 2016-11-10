@@ -18,9 +18,8 @@ DESTDIR = $$PWD/bin
 
 SOURCES += \
     iniproc/ini_processing.cpp \
-    ini_demo.cpp \
-    fileMapper/file_mapper.cpp
+    ini_demo.cpp
 
 HEADERS += \
     iniproc/ini_processing.h \
-    fileMapper/file_mapper.h
+    iniproc/ini_processing_variant.h
