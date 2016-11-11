@@ -49,6 +49,8 @@ struct TestValues1
     double      ican;
     String      gravityAccelX;
     double      gravityAccel;
+    std::vector<int> intarray;
+    std::vector<double> doublearray;
     void spit()
     {
         std::cout  << "I'm a " << whoIAm << " ^^\n" <<
@@ -364,7 +366,12 @@ void testIniParserNEW(std::string iniFile, TestValues1<std::string> &g_testData,
     /************************************************************/
     BEGIN()
     /*IniProcessing*/
-    IniProcessing ini(iniFile.c_str(), QSettings::IniFormat);
+    IniProcessing ini;
+
+    if(!ini.open(iniFile.c_str()))
+        printf("%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%\nWHAAAT???? %d, %d\n%%%%%%%%%%%%%%%%%%%%%%%%%%\n",
+               ini.lastError(), ini.lineWithError());
+
     END("Time to init");
 
     if(deepTestOfBig)
@@ -557,35 +564,17 @@ void testIniParserNEW(std::string iniFile, TestValues1<std::string> &g_testData,
     else
     {
         BEGIN()
-        ini.beginGroup("character-3");
+        ini.beginGroup("levels-main");
         END("Time to begin");
         BEGIN()
-        ini.read("name", g_testData.whoIAm, "Dr. Zhopa");
-        END("Time to take Str");
+        ini.read("intarray", g_testData.intarray, {0});
+        END("Time to take int[]");
         BEGIN()
-        ini.read("fail-effect-gravity", g_testData.failEffectGravity, 1.3);
-        END("Time to take double");
-        BEGIN()
-        ini.read("sprite-folder", g_testData.myFolderIs, "wat???");
-        END("Time to take Str");
+        ini.read("doublearray", g_testData.doublearray, {0});
+        END("Time to take double[]");
         BEGIN()
         ini.endGroup();
         END("Time to end");
-        BEGIN()
-        ini.beginGroup("character-3-env-common-air");
-        END("Time to begin 2");
-        BEGIN()
-        ini.read("walk_force", g_testData.ican, 0.0);
-        END("Time to take double");
-        BEGIN()
-        ini.read("gravity_accelX", g_testData.gravityAccelX, "");
-        END("Time to take Str");
-        BEGIN()
-        ini.read("gravity_accel", g_testData.gravityAccel, 0.0);
-        END("Time to take Double");
-        BEGIN()
-        ini.endGroup();
-        END("Time to end 2");
     }
 
     /************************************************************/
@@ -701,6 +690,19 @@ int main(int argc, char **argv)
         printf("\nTotal time (tiny ini): My (debug/release): %f, QSettings (release): %f\n\n", elapsed_secs1, elapsed_secs2);
         g_testDataM.spit();
         g_testDataQ.spit();
+    }
+    //
+    //Test small INI
+    {
+        tests.clear();
+        begin   = std::clock();
+        testIniParserNEW("../example-tiny.ini", g_testDataM, false);
+        end     = std::clock();
+        elapsed_secs1 = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;
+        tests1 = tests;
+        tests2 = tests;
+        dumpTests();
+        tests.clear();
     }
     x.quit();
     return 0;

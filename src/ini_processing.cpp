@@ -29,9 +29,10 @@ DEALINGS IN THE SOFTWARE.
 //#define INI_STOP_ON_FIRST_ERROR
 
 #include "ini_processing.h"
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstring>
+#include <cstdlib>
+#include <sstream>
 #include <assert.h>
 #ifdef _WIN32
 #include <windows.h>
@@ -146,6 +147,21 @@ inline char *find_inieq_or_comment(char *s)
     return s;
 }
 
+inline char *removeQuotes(char *begin, char *end)
+{
+    if((*begin == '\0') || (begin == end))
+        return begin;
+
+    if((*begin == '"') && (begin + 1 != end))
+        begin++;
+    else
+        return begin;
+
+    if(*(end - 1) == '"')
+        *(end - 1) = '\0';
+
+    return begin;
+}
 
 //Remove comment line from a tail of value
 inline void skipcomment(char *value)
@@ -292,7 +308,7 @@ bool IniProcessing::parseHelper(char *data, size_t size)
 #ifdef INIDEBUG
                     printf("-> [%s]; %s = %s\n", section, name, v);
 #endif
-                    (*recentKeys)[name] = v;
+                    (*recentKeys)[name] = removeQuotes(v, v + strlen(v));
                 }
             }
             else if(!error)
@@ -476,6 +492,11 @@ void IniProcessing::close()
     m_params.iniData.clear();
     m_params.opened = false;
     m_params.lineWithError = -1;
+}
+
+IniProcessing::ErrCode IniProcessing::lastError()
+{
+    return m_params.errorCode;
 }
 
 int IniProcessing::lineWithError()
@@ -789,6 +810,127 @@ void IniProcessing::read(const char *key, std::string &dest, const std::string &
     dest = e->second;
 }
 
+template<class TList>
+inline void StrToNumVectorHelper(const std::string &source, TList &dest, const typename TList::value_type &def)
+{
+    typedef typename TList::value_type T;
+
+    if(!source.empty())
+    {
+        std::stringstream ss(source);
+        std::string item;
+        std::vector<std::string> splittedStrings;
+
+        while(std::getline(ss, item, ','))
+        {
+            try
+            {
+                if(std::is_same<T, int>::value)
+                    dest.push_back(static_cast<int>(std::strtoul(item.c_str(), NULL, 0)));
+                else if(std::is_same<T, long>::value)
+                    dest.push_back(std::atol(item.c_str()));
+                else if(std::is_same<T, unsigned int>::value)
+                    dest.push_back(static_cast<unsigned int>(std::strtoul(item.c_str(), NULL, 0)));
+                else if(std::is_same<T, unsigned long>::value)
+                    dest.push_back(std::strtoul(item.c_str(), NULL, 0));
+                else if(std::is_same<T, float>::value)
+                    dest.push_back(std::strtof(item.c_str(), NULL));
+                else
+                    dest.push_back(std::strtod(item.c_str(), NULL));
+            }
+            catch(...)
+            {
+                printf("WTF?\n");
+                fflush(stdout);
+                dest.pop_back();
+            }
+        }
+
+        if(dest.empty())
+            dest.push_back(def);
+    }
+    else
+        dest.push_back(def);
+}
+
+void IniProcessing::read(const char *key, std::vector<unsigned int> &dest, const std::vector<unsigned int> &defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    StrToNumVectorHelper(e->second, dest, 0u);
+}
+void IniProcessing::read(const char *key, std::vector<int> &dest, const std::vector<int> &defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    StrToNumVectorHelper(e->second, dest, 0);
+}
+void IniProcessing::read(const char *key, std::vector<unsigned long> &dest, const std::vector<unsigned long> &defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    StrToNumVectorHelper(e->second, dest, 0ul);
+}
+void IniProcessing::read(const char *key, std::vector<long> &dest, const std::vector<long> &defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    StrToNumVectorHelper(e->second, dest, 0l);
+}
+void IniProcessing::read(const char *key, std::vector<float> &dest, const std::vector<float> &defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    StrToNumVectorHelper(e->second, dest, 0.0f);
+}
+void IniProcessing::read(const char *key, std::vector<double> &dest, const std::vector<double> &defVal)
+{
+    bool ok = false;
+    params::IniKeys::iterator e = readHelper(key, ok);
+
+    if(!ok)
+    {
+        dest = defVal;
+        return;
+    }
+
+    StrToNumVectorHelper(e->second, dest, 0.0);
+}
 IniProcessingVariant IniProcessing::value(const char *key, const IniProcessingVariant &defVal)
 {
     bool ok = false;

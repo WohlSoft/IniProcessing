@@ -28,6 +28,7 @@ DEALINGS IN THE SOFTWARE.
 #include <string>
 #include <cstring>
 #include <cstdlib>
+#include <vector>
 #include <unordered_map>
 
 #include "ini_processing_variant.h"
@@ -116,6 +117,11 @@ class IniProcessing
          */
         void close();
 
+        /**
+         * @brief Returns last happen error code
+         * @return Error code
+         */
+        ErrCode lastError();
         /**
          * @brief Line number which contains error
          * @return line number wit herror
@@ -252,6 +258,49 @@ class IniProcessing
          * @param [_IN] defVal
          */
         void read(const char *key, std::string &dest, const std::string &defVal);
+
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
+        void read(const char *key, std::vector<unsigned int> &dest, const std::vector<unsigned int> &defVal = std::vector<unsigned int>());
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
+        void read(const char *key, std::vector<int> &dest, const std::vector<int> &defVal = std::vector<int>());
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
+        void read(const char *key, std::vector<unsigned long> &dest, const std::vector<unsigned long> &defVal = std::vector<unsigned long>());
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
+        void read(const char *key, std::vector<long> &dest, const std::vector<long> &defVal = std::vector<long>());
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
+        void read(const char *key, std::vector<float> &dest, const std::vector<float> &defVal = std::vector<float>());
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
+        void read(const char *key, std::vector<double> &dest, const std::vector<double> &defVal = std::vector<double>());
 
         /**
          * @brief QSettings-compatible way to retreive value
