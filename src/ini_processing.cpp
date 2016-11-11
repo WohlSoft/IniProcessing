@@ -201,7 +201,7 @@ inline bool memfgets(char *&line, char *data, char *&pos, char *end)
 }
 
 /* See documentation in header file. */
-bool IniProcessing::ini_parse_file(char *data, size_t size)
+bool IniProcessing::parseHelper(char *data, size_t size)
 {
     char *section = nullptr;
 #if defined(INI_ALLOW_MULTILINE)
@@ -319,7 +319,7 @@ bool IniProcessing::ini_parse_file(char *data, size_t size)
 }
 
 /* See documentation in header file. */
-bool IniProcessing::ini_parse(const char *filename)
+bool IniProcessing::parseFile(const char *filename)
 {
     bool valid = true;
     char *tmp = nullptr;
@@ -380,7 +380,7 @@ bool IniProcessing::ini_parse(const char *filename)
     if(valid)
     {
         *(tmp + /*file.size*/size) = '\0';//null terminate last line
-        valid = ini_parse_file(tmp, size/*file.size*/);
+        valid = parseHelper(tmp, size/*file.size*/);
     }
 
 #endif
@@ -388,7 +388,7 @@ bool IniProcessing::ini_parse(const char *filename)
     return valid;
 }
 
-bool IniProcessing::ini_parseMemory(char *mem, size_t size)
+bool IniProcessing::parseMemory(char *mem, size_t size)
 {
     bool valid = true;
     char *tmp = nullptr;
@@ -402,7 +402,7 @@ bool IniProcessing::ini_parseMemory(char *mem, size_t size)
 
     memcpy(tmp, mem, static_cast<size_t>(size));
     *(tmp + size) = '\0';//null terminate last line
-    valid = ini_parse_file(tmp, size);
+    valid = parseHelper(tmp, size);
     return valid;
 }
 
@@ -414,6 +414,12 @@ IniProcessing::IniProcessing(const std::string &iniFileName, int) :
     m_params{iniFileName, false, -1, ERR_OK, false, params::IniSections(), nullptr}
 {
     open(iniFileName);
+}
+
+IniProcessing::IniProcessing(char *memory, size_t size):
+    m_params{"", false, -1, ERR_OK, false, params::IniSections(), nullptr}
+{
+    openMem(memory, size);
 }
 
 IniProcessing::IniProcessing(const IniProcessing &ip) :
@@ -429,7 +435,7 @@ bool IniProcessing::open(const std::string &iniFileName)
         close();
         m_params.errorCode = ERR_OK;
         m_params.filePath  = iniFileName;
-        bool res = ini_parse(m_params.filePath.c_str());
+        bool res = parseFile(m_params.filePath.c_str());
 #ifdef INIDEBUG
 
         if(res)
@@ -455,7 +461,7 @@ bool IniProcessing::openMem(char *memory, size_t size)
         close();
         m_params.errorCode = ERR_OK;
         m_params.filePath.clear();
-        bool res = ini_parseMemory(memory, size);
+        bool res = parseMemory(memory, size);
         m_params.opened = res;
         return res;
     }

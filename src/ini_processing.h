@@ -32,15 +32,26 @@ DEALINGS IN THE SOFTWARE.
 
 #include "ini_processing_variant.h"
 
+/**
+ * @brief INI Processor - an utility which providing fast and flexible INI file parsing API
+ */
 class IniProcessing
 {
     public:
+        /**
+         * @brief Available error codes
+         */
         enum ErrCode
         {
+            //! Everything is fine
             ERR_OK = 0,
+            //! File not found or memory pointer is null
             ERR_NOFILE,
+            //! Invalid section declaration syntax
             ERR_SECTION_SYNTAX,
+            //! Invalid key declaration syntax
             ERR_KEY_SYNTAX,
+            //! No available memory
             ERR_NO_MEMORY
         };
 
@@ -58,13 +69,10 @@ class IniProcessing
             IniKeys    *currentGroup;
         } m_params;
 
-        bool ini_parse(const char *filename);
+        bool parseHelper(char *data, size_t size);
 
-        bool ini_parseMemory(char *mem, size_t size);
-
-        /* Same as ini_parse(), but takes a FILE* instead of filename. This doesn't
-           close the file when it's finished -- the caller must do that. */
-        bool ini_parse_file(char *data, size_t size);
+        bool parseFile(const char *filename);
+        bool parseMemory(char *mem, size_t size);
 
         inline params::IniKeys::iterator readHelper(const char *key, bool &ok)
         {
@@ -85,33 +93,172 @@ class IniProcessing
     public:
         IniProcessing();
         IniProcessing(const std::string &iniFileName, int dummy = 0);
+        IniProcessing(char *memory, size_t size);
         IniProcessing(const IniProcessing &ip);
+
+        /**
+         * @brief Open INI-file from disk and parse it
+         * @param iniFileName full path to INI-file to parse
+         * @return true if INI file has been passed, false if any error happen
+         */
         bool open(const std::string &iniFileName);
+
+        /**
+         * @brief Open raw INI-data from memory and parse it
+         * @param memory pointer to memory block
+         * @param size size of memory block to process
+         * @return
+         */
         bool openMem(char *memory, size_t size);
+
+        /**
+         * @brief Clear all internal buffers and close the file
+         */
         void close();
+
+        /**
+         * @brief Line number which contains error
+         * @return line number wit herror
+         */
         int  lineWithError();
+
+        /**
+         * @brief State of INI Processor
+         * @return true if any file is opened
+         */
         bool isOpened();
 
+        /**
+         * @brief Select a section to process
+         * @param groupName name of section to process
+         * @return true if group exists and opened
+         */
         bool beginGroup(const std::string &groupName);
+
+        /**
+         * @brief Is this INI file contains section of specific name
+         * @param groupName name of section
+         * @return true if section is exists
+         */
         bool contains(const std::string &groupName);
+
+        /**
+         * @brief Is current section contains specific key name
+         * @param keyName name of key
+         * @return true if key is presented in this section
+         */
         bool hasKey(const std::string &keyName);
+
+        /**
+         * @brief Release current section to choice another for process
+         */
         void endGroup();
 
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
         void read(const char *key, bool &dest, bool defVal);
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
         void read(const char *key, unsigned char &dest, unsigned char defVal);
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
         void read(const char *key, char &dest, char defVal);
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
         void read(const char *key, unsigned short &dest, unsigned short defVal);
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
         void read(const char *key, short &dest, short defVal);
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
         void read(const char *key, unsigned int &dest, unsigned int defVal);
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
         void read(const char *key, int &dest, int defVal);
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
         void read(const char *key, unsigned long &dest, unsigned long defVal);
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
         void read(const char *key, long &dest, long defVal);
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
         void read(const char *key, unsigned long long &dest, unsigned long long defVal);
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
         void read(const char *key, long long &dest, long long defVal);
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
         void read(const char *key, float &dest, float defVal);
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
         void read(const char *key, double &dest, double defVal);
+        /**
+         * @brief Retreive value by specific key and pass it via reference
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal
+         */
         void read(const char *key, std::string &dest, const std::string &defVal);
 
+        /**
+         * @brief QSettings-compatible way to retreive value
+         * @param key key with value to retreive
+         * @param defVal default value key
+         * @return variant which contains a value
+         */
         IniProcessingVariant value(const char *key, const IniProcessingVariant &defVal = IniProcessingVariant());
 };
 
