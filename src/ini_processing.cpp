@@ -840,8 +840,6 @@ inline void StrToNumVectorHelper(const std::string &source, TList &dest, const t
             }
             catch(...)
             {
-                printf("WTF?\n");
-                fflush(stdout);
                 dest.pop_back();
             }
         }
