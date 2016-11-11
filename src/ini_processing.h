@@ -68,6 +68,7 @@ class IniProcessing
             typedef     std::unordered_map<std::string, IniKeys> IniSections;
             IniSections iniData;
             IniKeys    *currentGroup;
+            std::string currentGroupName;
         } m_params;
 
         bool parseHelper(char *data, size_t size);
@@ -149,6 +150,12 @@ class IniProcessing
         bool contains(const std::string &groupName);
 
         /**
+         * @brief Currently processing section
+         * @return name of current section
+         */
+        std::string group();
+
+        /**
          * @brief Is current section contains specific key name
          * @param keyName name of key
          * @return true if key is presented in this section
@@ -164,98 +171,98 @@ class IniProcessing
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, bool &dest, bool defVal);
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, unsigned char &dest, unsigned char defVal);
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, char &dest, char defVal);
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, unsigned short &dest, unsigned short defVal);
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, short &dest, short defVal);
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, unsigned int &dest, unsigned int defVal);
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, int &dest, int defVal);
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, unsigned long &dest, unsigned long defVal);
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, long &dest, long defVal);
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, unsigned long long &dest, unsigned long long defVal);
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, long long &dest, long long defVal);
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, float &dest, float defVal);
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, double &dest, double defVal);
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, std::string &dest, const std::string &defVal);
 
@@ -263,44 +270,78 @@ class IniProcessing
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, std::vector<unsigned int> &dest, const std::vector<unsigned int> &defVal = std::vector<unsigned int>());
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, std::vector<int> &dest, const std::vector<int> &defVal = std::vector<int>());
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, std::vector<unsigned long> &dest, const std::vector<unsigned long> &defVal = std::vector<unsigned long>());
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, std::vector<long> &dest, const std::vector<long> &defVal = std::vector<long>());
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, std::vector<float> &dest, const std::vector<float> &defVal = std::vector<float>());
         /**
          * @brief Retreive value by specific key and pass it via reference
          * @param [_IN] key name of key with value to retrieved
          * @param [_OUT] dest Reference to destination variable to store retrieved value
-         * @param [_IN] defVal
+         * @param [_IN] defVal Default value for case of non-existing key
          */
         void read(const char *key, std::vector<double> &dest, const std::vector<double> &defVal = std::vector<double>());
+
+
+        typedef std::unordered_map<std::string, int> StrEnumMap;
+
+
+        template<typename T>
+        /**
+         * @brief Retreive value by string-based enum key
+         * @param [_IN] key name of key with value to retrieved
+         * @param [_OUT] dest Reference to destination variable to store retrieved value
+         * @param [_IN] defVal Default value for case of non-existing key
+         * @param [_IN] enumMap
+         */
+        void readEnum(const char *key, T &dest, T defVal, IniProcessing::StrEnumMap &enumMap)
+        {
+            bool ok = false;
+            params::IniKeys::iterator e = readHelper(key, ok);
+
+            if(!ok)
+            {
+                dest = defVal;
+                return;
+            }
+
+            StrEnumMap::iterator em = enumMap.find(e->second);
+
+            if(em == enumMap.end())
+            {
+                dest = defVal;
+                return;
+            }
+
+            dest = static_cast<T>(em->second);
+        }
 
         /**
          * @brief QSettings-compatible way to retreive value

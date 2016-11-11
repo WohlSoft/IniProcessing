@@ -423,17 +423,17 @@ bool IniProcessing::parseMemory(char *mem, size_t size)
 }
 
 IniProcessing::IniProcessing() :
-    m_params{"", false, -1, ERR_OK, false, params::IniSections(), nullptr}
+    m_params{"", false, -1, ERR_OK, false, params::IniSections(), nullptr, ""}
 {}
 
 IniProcessing::IniProcessing(const std::string &iniFileName, int) :
-    m_params{iniFileName, false, -1, ERR_OK, false, params::IniSections(), nullptr}
+    m_params{iniFileName, false, -1, ERR_OK, false, params::IniSections(), nullptr, ""}
 {
     open(iniFileName);
 }
 
 IniProcessing::IniProcessing(char *memory, size_t size):
-    m_params{"", false, -1, ERR_OK, false, params::IniSections(), nullptr}
+    m_params{"", false, -1, ERR_OK, false, params::IniSections(), nullptr, ""}
 {
     openMem(memory, size);
 }
@@ -521,6 +521,7 @@ bool IniProcessing::beginGroup(const std::string &groupName)
 
     params::IniKeys &k = e->second;
     m_params.currentGroup = &k;
+    m_params.currentGroupName = groupName;
     return true;
 }
 
@@ -531,6 +532,11 @@ bool IniProcessing::contains(const std::string &groupName)
 
     params::IniSections::iterator e = m_params.iniData.find(groupName);
     return (e != m_params.iniData.end());
+}
+
+std::string IniProcessing::group()
+{
+    return m_params.currentGroupName;
 }
 
 bool IniProcessing::hasKey(const std::string &keyName)
@@ -548,6 +554,7 @@ bool IniProcessing::hasKey(const std::string &keyName)
 void IniProcessing::endGroup()
 {
     m_params.currentGroup = nullptr;
+    m_params.currentGroupName.clear();
 }
 
 void IniProcessing::read(const char *key, bool &dest, bool defVal)
@@ -929,6 +936,8 @@ void IniProcessing::read(const char *key, std::vector<double> &dest, const std::
 
     StrToNumVectorHelper(e->second, dest, 0.0);
 }
+
+
 IniProcessingVariant IniProcessing::value(const char *key, const IniProcessingVariant &defVal)
 {
     bool ok = false;
