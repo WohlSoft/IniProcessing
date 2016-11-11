@@ -1,3 +1,27 @@
+/*
+INI Processor - a small library which allows you parsing INI-files
+
+Copyright (c) 2016 Vitaliy Novichkov <admin@wohlnet.ru>
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+*/
+
 #ifndef INIPROCESSING_H
 #define INIPROCESSING_H
 
@@ -33,20 +57,6 @@ class IniProcessing
             IniSections iniData;
             IniKeys    *currentGroup;
         } m_params;
-        bool parse();
-
-        /* Parse given INI-style file. May have [section]s, name=value pairs
-           (whitespace stripped), and comments starting with ';' (semicolon). Section
-           is "" if name=value pair parsed before any section heading. name:value
-           pairs are also supported as a concession to Python's ConfigParser.
-           For each name=value pair parsed, call handler function with given user
-           pointer as well as section, name, and value (data only valid for duration
-           of handler call). Handler should return nonzero on success, zero on error.
-           Returns 0 on success, line number of first error on parse error (doesn't
-           stop on first error), -1 on file open error, or -2 on memory allocation
-           error (only when INI_USE_STACK is zero).
-        */
-        //int handler(params::IniKeys* section, char *name, char *value);
 
         bool ini_parse(const char *filename);
 

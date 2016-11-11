@@ -17,9 +17,9 @@ DESTDIR = $$PWD/bin
 #DEFINES += INIDEBUG
 
 SOURCES += \
-    iniproc/ini_processing.cpp \
+    ../src/ini_processing.cpp \
     ini_demo.cpp
 
 HEADERS += \
-    iniproc/ini_processing.h \
-    iniproc/ini_processing_variant.h
+    ../src/ini_processing.h \
+    ../src/ini_processing_variant.h

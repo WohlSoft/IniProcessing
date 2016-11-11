@@ -1,4 +1,5 @@
+test/bin
+build-*
 *.user
-bin
 *.o
 

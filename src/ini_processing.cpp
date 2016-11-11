@@ -1,23 +1,32 @@
-/* Nonzero to allow a UTF-8 BOM sequence (0xEF 0xBB 0xBF) at the start of
-   the file. See http://code.google.com/p/inih/issues/detail?id=21 */
-#ifndef INI_ALLOW_BOM
-#define INI_ALLOW_BOM 1
-#endif
+/*
+INI Processor - a small library which allows you parsing INI-files
 
-/* Nonzero to use stack, zero to use heap (malloc/free). */
-//#ifndef INI_USE_STACK
-//#define INI_USE_STACK 1
-//#endif
+Copyright (c) 2016 Vitaliy Novichkov <admin@wohlnet.ru>
+
+Permission is hereby granted, free of charge, to any person obtaining
+a copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation the
+rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+sell copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
+OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE,
+ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+
+*/
+
+//#define USE_FILE_MAPPER
 
 /* Stop parsing on first error (default is to keep parsing). */
-//#ifndef INI_STOP_ON_FIRST_ERROR
-//#define INI_STOP_ON_FIRST_ERROR 1
-//#endif
-
-/* Maximum line length for any line in INI file. */
-//#ifndef INI_MAX_LINE
-//#define INI_MAX_LINE 500
-//#endif
+//#define INI_STOP_ON_FIRST_ERROR
 
 #include "ini_processing.h"
 #include <stdio.h>
@@ -27,13 +36,9 @@
 #ifdef _WIN32
 #include <windows.h>
 #endif
-//#if !defined(INI_USE_STACK)
-//#include <stdlib.h>
-//#endif
-//#define MAX_SECTION 100
-//#define MAX_NAME 100
 
 #ifdef USE_FILE_MAPPER
+/*****Replace this with right path to file mapper class*****/
 #include "../fileMapper/file_mapper.h"
 #endif
 
@@ -179,7 +184,7 @@ inline bool memfgets(char *&line, char *data, char *&pos, char *end)
         if(*pos == '\n')
         {
             if((pos > data) && (*(pos - 1) == '\r'))
-                *((pos++) - 1) = '\0';
+                *((pos++) - 1) = '\0';//Support CRLF too
             else
                 *(pos++) = '\0';
 
@@ -219,12 +224,10 @@ bool IniProcessing::ini_parse_file(char *data, size_t size)
     {
         lineno++;
         start = line;
-#if defined(INI_ALLOW_BOM)
 
         if((lineno == 1) && (size >= 3) && (memcmp(start, utfbom, 3) == 0))
             start += 3;
 
-#endif
         start = lrtrim(start);
 
         if(!*start)//if empty line - skip it away!
@@ -248,9 +251,9 @@ bool IniProcessing::ini_parse_file(char *data, size_t size)
             {
                 *end = '\0';
                 section = start + 1;
-#if defined(INI_ALLOW_MULTILINE)
-                prev_name = nullptr;
-#endif
+                //#if defined(INI_ALLOW_MULTILINE)
+                //                prev_name = nullptr;
+                //#endif
                 recentKeys = &m_params.iniData[section];
             }
             else if(!error)
@@ -265,13 +268,9 @@ bool IniProcessing::ini_parse_file(char *data, size_t size)
         default:
         {
             /* Not a comment, must be a name[=:]value pair */
-            //end = find_char_or_comment(start, '=');
             end = find_inieq_or_comment(start);
 
-            //if(*end != '=')
-            //    end = find_char_or_comment(start, ':');
-
-            if(IS_INIEQUAL(*end) /**end == '=' || *end == ':'*/)
+            if(IS_INIEQUAL(*end))
             {
                 *end = '\0';
                 name = rstrip(start);
@@ -282,10 +281,6 @@ bool IniProcessing::ini_parse_file(char *data, size_t size)
                     *end = '\0';
 
                 rstrip(value);
-                //#if defined(INI_ALLOW_MULTILINE)
-                //  /* Valid name[=:]value pair found, call handler */
-                //  strncpy0(prev_name, name, MAX_NAME);
-                //#endif
                 {
                     char *v = value;
                     skipcomment(v);
@@ -309,7 +304,7 @@ bool IniProcessing::ini_parse_file(char *data, size_t size)
 
             break;
         }
-        }
+        }//switch(*start)
 
 #if defined(INI_STOP_ON_FIRST_ERROR)
 
@@ -351,6 +346,7 @@ bool IniProcessing::ini_parse(const char *filename)
     valid = ini_parse_file(tmp, static_cast<size_t>(file.size));
 #else
 #ifdef _WIN32
+    //Convert UTF8 file path into UTF16 to support non-ASCII paths on Windows
     std::wstring dest;
     dest.resize(filename);
     int newSize = MultiByteToWideChar(CP_UTF8,
@@ -410,12 +406,6 @@ bool IniProcessing::ini_parseMemory(char *mem, size_t size)
     return valid;
 }
 
-
-bool IniProcessing::parse()
-{
-    return ini_parse(m_params.filePath.c_str());
-}
-
 IniProcessing::IniProcessing() :
     m_params{"", false, -1, ERR_OK, false, params::IniSections(), nullptr}
 {}
@@ -439,7 +429,7 @@ bool IniProcessing::open(const std::string &iniFileName)
         close();
         m_params.errorCode = ERR_OK;
         m_params.filePath  = iniFileName;
-        bool res = parse();
+        bool res = ini_parse(m_params.filePath.c_str());
 #ifdef INIDEBUG
 
         if(res)
