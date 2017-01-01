@@ -5,8 +5,10 @@ CONFIG += qt
 
 QT  += core
 
+DEFINES += INI_PROCESSING_ALLOW_QT_TYPES
+
 release:{
-QMAKE_CXXFLAGS += -Ofast
+    QMAKE_CXXFLAGS += -Ofast
 }
 #QMAKE_CFLAGS += -march=native
 #QMAKE_CXXFLAGS += -march=native
