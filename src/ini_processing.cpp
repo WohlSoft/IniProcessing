@@ -32,6 +32,7 @@ DEALINGS IN THE SOFTWARE.
 #include <cstdio>
 #include <cstring>
 #include <cstdlib>
+#include <clocale>
 #include <sstream>
 #include <assert.h>
 #ifdef _WIN32
@@ -419,6 +420,7 @@ bool IniProcessing::parseMemory(char *mem, size_t size)
     memcpy(tmp, mem, static_cast<size_t>(size));
     *(tmp + size) = '\0';//null terminate last line
     valid = parseHelper(tmp, size);
+    free(tmp);
     return valid;
 }
 
