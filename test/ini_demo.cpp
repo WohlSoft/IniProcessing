@@ -704,6 +704,34 @@ int main(int argc, char **argv)
         dumpTests();
         tests.clear();
     }
+
+    //
+    //Write test
+    {
+        IniProcessing myOutput("writeme.ini");
+
+        myOutput.beginGroup("Fart");
+        myOutput.setValue("meow", 45.234);
+        myOutput.setValue("woof", -542);
+        myOutput.setValue("pee", 42);
+        myOutput.setValue("koo", "3.41 It's a string with 34 number!");
+        myOutput.setValue("MY-DIGITS", std::vector<int>({3, -5, 134, 12, 546, 12, 0, -4}));
+        myOutput.endGroup();
+
+        myOutput.beginGroup("My-Chickens");
+        myOutput.setValue("hens", 34);
+        myOutput.setValue("cocks", 1);
+        myOutput.setValue("eggs", 45266);
+        myOutput.setValue("chicks", 46715171257);
+        myOutput.setValue("cost", -15.245);
+        myOutput.setValue("cost2", -15.245346521);
+        myOutput.setValue("result", -11.245e-7);
+        myOutput.endGroup();
+
+        if(!myOutput.writeIniFile())
+            printf("Ouch, can't write this!\n");
+        fflush(stdout);
+    }
     x.quit();
     return 0;
 }
