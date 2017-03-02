@@ -22,6 +22,7 @@ TEST_CASE( "Field reading validation", "[ini-reading]" )
 
     //Group of integers
     REQUIRE( ini.beginGroup("integers") == true );
+    SECTION( "Validating integers" )
     {
         REQUIRE( ini.hasKey("integer-p") == true );
         REQUIRE( ini.hasKey("what-the-heck") == false );
@@ -39,6 +40,7 @@ TEST_CASE( "Field reading validation", "[ini-reading]" )
     ini.endGroup();
 
     REQUIRE( ini.beginGroup("fake-group") == false );
+    SECTION( "Validating default values" )
     {
         integer = 0;
         ini.read("another-non-existing-field", integer, 54636);
@@ -47,6 +49,7 @@ TEST_CASE( "Field reading validation", "[ini-reading]" )
     ini.endGroup();
 
     REQUIRE( ini.beginGroup("floatings") == true );
+    SECTION( "Validating floating point numbers" )
     {
         ini.read("floating-p1", floating, 0);
         REQUIRE( floating == 341.1235283);
@@ -67,6 +70,7 @@ TEST_CASE( "Field reading validation", "[ini-reading]" )
 
 
     REQUIRE( ini.beginGroup("strings") == true );
+    SECTION( "Validating strings include escape sequence probes" )
     {
         ini.read("string1", str, "");
         REQUIRE( str.compare("this is a string") == 0 );
@@ -89,6 +93,7 @@ TEST_CASE( "Field reading validation", "[ini-reading]" )
     ini.endGroup();
 
     REQUIRE( ini.beginGroup("arrays") == true );
+    SECTION( "Validating numeric arrays" )
     {
         ini.read("list-int", integers, std::vector<long>());
         REQUIRE( integers.size() == 5 );
@@ -109,6 +114,7 @@ TEST_CASE( "Field reading validation", "[ini-reading]" )
     ini.endGroup();
 
     REQUIRE( ini.beginGroup("bools") == true );
+    SECTION( "Validating booleans" )
     {
         ini.read("bool1-t", boolean, false);
         REQUIRE( boolean );
@@ -129,7 +135,7 @@ TEST_CASE( "Field reading validation", "[ini-reading]" )
 
 TEST_CASE( "Field writing and then reading to validate", "[ini-writing]" )
 {
-    //Write the experimental file
+    SECTION( "Write the experimental file" )
     {
         IniProcessing myOutput("writeme.ini");
 
@@ -165,12 +171,13 @@ TEST_CASE( "Field writing and then reading to validate", "[ini-writing]" )
         REQUIRE( myOutput.writeIniFile() );
     }
 
-    //Modify one of exist fields
+    SECTION( "Modify one of exist fields" )
     {
         IniProcessing ini;
         REQUIRE( ini.open("writeme.ini") );
 
         REQUIRE( ini.beginGroup("My-Pets") );
+        SECTION( "My-Pets" )
         {
             double floating = 0;
             ini.read("meow", floating, 0);
@@ -183,8 +190,7 @@ TEST_CASE( "Field writing and then reading to validate", "[ini-writing]" )
         REQUIRE( ini.writeIniFile() );
     }
 
-
-    //Reading to validate result
+    SECTION( "Reading to validate result" )
     {
         long long integer = 0;
         double    floating = 0;
@@ -196,6 +202,7 @@ TEST_CASE( "Field writing and then reading to validate", "[ini-writing]" )
         IniProcessing ini("writeme.ini");
 
         REQUIRE( ini.beginGroup("My-Pets") );
+        SECTION( "My-Pets" )
         {
             ini.read("meow", floating, 0);
             REQUIRE( floating == +87.3466e3);
@@ -230,6 +237,7 @@ TEST_CASE( "Field writing and then reading to validate", "[ini-writing]" )
         ini.endGroup();
 
         REQUIRE( ini.beginGroup("My-Chickens") );
+        SECTION( "My-Chickens" )
         {
             ini.read("hens", floating, 0);
             REQUIRE( floating == 34);
