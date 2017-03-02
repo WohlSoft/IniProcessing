@@ -177,8 +177,9 @@ inline char *unescapeString(char* str)
             switch(*src)
             {
             case 'n': *dst = '\n'; break;
+            case 'r': *dst = '\r'; break;
             case 't': *dst = '\t'; break;
-            default: *dst = *src; break;
+            default:  *dst = *src; break;
             }
         }
         else
@@ -1349,14 +1350,20 @@ bool IniProcessing::writeIniFile()
             {
                 //Set escape quotes and put the string with a quotes
                 std::string &s = key->second;
-                std::size_t n = s.length();
                 std::string escaped;
-                escaped.reserve(n * 2);
-                for(std::size_t i = 0; i < n; ++i)
+                escaped.reserve(s.length() * 2);
+                for(char &c : s)
                 {
-                    if(s[i] == '\\' || s[i] == '"')
-                        escaped += '\\';
-                    escaped += s[i];
+                    switch(c)
+                    {
+                    case '\n': escaped += "\\n"; break;
+                    case '\r': escaped += "\\r"; break;
+                    case '\t': escaped += "\\t"; break;
+                    default:
+                        if((c == '\\') || (c == '"'))
+                            escaped.push_back('\\');
+                        escaped.push_back(c);
+                    }
                 }
                 fprintf(cFile, "%s = \"%s\"\n", key->first.c_str(), escaped.c_str());
             }

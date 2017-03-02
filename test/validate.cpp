@@ -143,6 +143,10 @@ TEST_CASE( "Field writing and then reading to validate", "[ini-writing]" )
             myOutput.setValue("MY-FLOAT", std::vector<double>({0.34,-32561.23,+34e4,-452.21E34,-12,9,1,333,-135e4}));
             myOutput.setValue("really", true);
             myOutput.setValue("why", false);
+            myOutput.setValue("jailbreak", "Hello!\nI'm jack\t-\ttheive."
+                                           "\nMy nick is \"bulldozer\""
+                                           " because I have to escape "
+                                           "from jail by destroying a wall.");
         }
         myOutput.endGroup();
 
@@ -216,6 +220,12 @@ TEST_CASE( "Field writing and then reading to validate", "[ini-writing]" )
 
             ini.read("why", boolean, true);
             REQUIRE( boolean == false);
+
+            ini.read("jailbreak", str, "");
+            REQUIRE( str.compare("Hello!\nI'm jack\t-\ttheive."
+                                 "\nMy nick is \"bulldozer\""
+                                 " because I have to escape "
+                                 "from jail by destroying a wall.") == 0);
         }
         ini.endGroup();
 
