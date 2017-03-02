@@ -11,7 +11,7 @@ It has no dependencies and using STL.
 
 # How to run unit testing
 
-You will need to have CMake>=3.5 and compiler with C++11 support
+You will need to have CMake>=3.2 and compiler with C++11 support
 ```bash
 cmake .
 make
