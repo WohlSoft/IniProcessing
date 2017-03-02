@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2016 Vitaliy Novichkov <admin@wohlnet.ru>
+Copyright (c) 2016-2017 Vitaliy Novichkov <admin@wohlnet.ru>
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the "Software"),
@@ -710,12 +710,13 @@ int main(int argc, char **argv)
     {
         IniProcessing myOutput("writeme.ini");
 
-        myOutput.beginGroup("Fart");
+        myOutput.beginGroup("My-Pets");
         myOutput.setValue("meow", 45.234);
         myOutput.setValue("woof", -542);
         myOutput.setValue("pee", 42);
         myOutput.setValue("koo", "3.41 It's a string with 34 number!");
         myOutput.setValue("MY-DIGITS", std::vector<int>({3, -5, 134, 12, 546, 12, 0, -4}));
+        myOutput.setValue("MY-FLOAT", std::vector<double>({0.34,-32561.23,+34e4,-452.21E34,-12,9,1,333,-135e4}));
         myOutput.endGroup();
 
         myOutput.beginGroup("My-Chickens");
