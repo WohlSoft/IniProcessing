@@ -1,9 +1,20 @@
 # IniProcessing
-A small INI file reader compatible with API of QSettings
+A small INI file reader and writer which compatible with API of QSettings
+
+[![CircleCI](https://circleci.com/gh/WohlSoft/IniProcessing.svg?style=svg)](https://circleci.com/gh/WohlSoft/IniProcessing)
 
 It has no dependencies and using STL.
 
 * Ready to use code you will find in `./src` folder
-* Example you can find in the `./test` folder where you will find a benchmark of this INI Procrssor and QSettings
-* Use INI_PROCESSING_ALLOW_QT_TYPES macro to support QString and other Qt's types in the Qt application
+* Example of usage and unit tests you can find in the `./test` folder where you also can find a benchmark of this INI Procrssor and QSettings
+* Use define the `INI_PROCESSING_ALLOW_QT_TYPES` macro to support QString and other Qt's types in the Qt applications
+
+# How to run unit testing
+
+You will need to have CMake>=3.5 and compiler with C++11 support
+```bash
+cmake .
+make
+make test
+```
 
