@@ -23,10 +23,40 @@ DEALINGS IN THE SOFTWARE.
 #include <QSettings>
 #include <QCoreApplication>
 
-#include <ctime>
 #include <iostream>
+#include <chrono>
 
 #include "../src/ini_processing.h"
+
+class ElapsedTimer
+{
+public:
+    typedef std::chrono::nanoseconds TimeT;
+    ElapsedTimer() {}
+    void start()
+    {
+        recent = std::chrono::high_resolution_clock::now();
+    }
+    void restart()
+    {
+        recent = std::chrono::high_resolution_clock::now();
+    }
+    int64_t elapsed()
+    {
+        using std::chrono::nanoseconds;
+        using std::chrono::duration_cast;
+        return duration_cast<nanoseconds>(std::chrono::high_resolution_clock::now() - recent).count();
+    }
+    std::chrono::high_resolution_clock::time_point recent;
+};
+
+#define MYBENCHMARK(resultTime, expression)\
+{\
+    ElapsedTimer clock;\
+    clock.start();\
+    {expression}\
+    resultTime = clock.elapsed();\
+}
 
 std::ostream &operator<<(std::ostream &out, QString &x)
 {
@@ -68,7 +98,7 @@ static std::vector<TePair> tests2;
 
 static std::vector<TePair> tests;
 
-void dumpTests()
+void dumpTests(bool noComplare = false)
 {
     printf("==========================================================================\n");
     printf("    My INI-parser             |          QSettings           |    Result? \n");
@@ -97,26 +127,33 @@ void dumpTests()
 
     printf("==========================================================================\n");
 
-    if(sumTime1 < sumTime2)
-        printf(" MY WIN\n");
-    else if(sumTime1 > sumTime2)
-        printf(" QSettings WIN\n");
+    if(noComplare)
+    {
+        printf("Test result was %f\n", sumTime1);
+    }
     else
-        printf(" DRAW! (both My and QSettings has same time!)\n");
+    {
+        if(sumTime1 < sumTime2)
+            printf(" MY WIN\n");
+        else if(sumTime1 > sumTime2)
+            printf(" QSettings WIN\n");
+        else
+            printf(" DRAW! (both My and QSettings has same time!)\n");
 
-    printf("My (%f) vs QSettings (%f)\n", sumTime1, sumTime2);
+        printf("My (%f) vs QSettings (%f)\n", sumTime1, sumTime2);
+    }
     printf("==========================================================================\n");
+    fflush(stdout);
 }
 
 template<class IniParser, class String>
 void testIniParser(std::string iniFile, TestValues1<String> &g_testData, bool deepTestOfBig = false)
 {
-    std::clock_t begin = 0;
-    std::clock_t end = 0;
+    ElapsedTimer timer;
     double       elapsed_secs = 0.0;
-#define BEGIN()     begin   = std::clock();
-#define END(tmsg)   end     = std::clock();\
-    elapsed_secs = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;\
+#define BEGIN()     timer.restart();
+#define END(tmsg)   \
+    elapsed_secs = double(timer.elapsed()) / 100000.0;\
     tests.push_back({tmsg, elapsed_secs});
     /************************************************************/
     BEGIN()
@@ -356,12 +393,11 @@ void testIniParser(std::string iniFile, TestValues1<String> &g_testData, bool de
 
 void testIniParserNEW(std::string iniFile, TestValues1<std::string> &g_testData, bool deepTestOfBig = false)
 {
-    std::clock_t begin = 0;
-    std::clock_t end = 0;
+    ElapsedTimer timer;
     double       elapsed_secs = 0.0;
-#define BEGIN()     begin   = std::clock();
-#define END(tmsg)   end     = std::clock();\
-    elapsed_secs = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;\
+#define BEGIN()     timer.restart();
+#define END(tmsg)   \
+    elapsed_secs = double(timer.elapsed()) / 100000.0;\
     tests.push_back({tmsg, elapsed_secs});
     /************************************************************/
     BEGIN()
@@ -587,29 +623,28 @@ int main(int argc, char **argv)
     std::cout.precision(10);
     std::cout.setf(std::ios::fixed);
     QCoreApplication x(argc, argv);
-    std::clock_t begin = 0;
-    std::clock_t end = 0;
     double elapsed_secs1 = 0.0;
     double elapsed_secs2 = 0.0;
+
+    ElapsedTimer timer;
     //
     //Test big INI (some)
     {
         tests.clear();
-        begin   = std::clock();
+        timer.restart();
         testIniParser<IniProcessing, std::string>("../example-big-1.ini", g_testDataM, false);
-        end     = std::clock();
-        elapsed_secs1 = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;
+        elapsed_secs1 = double(timer.elapsed()) / 1000000.0;
         tests1 = tests;
         tests.clear();
-        begin  = std::clock();
+        timer.restart();
         testIniParser<QSettings, QString>("../example-big-1.ini", g_testDataQ, false);
-        end    = std::clock();
-        elapsed_secs2 = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;
+        elapsed_secs2 = double(timer.elapsed()) / 1000000.0;
         tests2 = tests;
         dumpTests();
-        printf("\nTotal time (big ini, some): My (debug/release): %f, QSettings (release): %f\n\n",
+        printf("\nTotal time (big ini, partial reading): My (debug/release): %f, QSettings (release): %f\n\n",
                elapsed_secs1,
                elapsed_secs2);
+        fflush(stdout);
         g_testDataM.spit();
         g_testDataQ.spit();
     }
@@ -617,21 +652,20 @@ int main(int argc, char **argv)
     //Test big INI (full)
     {
         tests.clear();
-        begin   = std::clock();
+        timer.restart();
         testIniParser<IniProcessing, std::string>("../example-big-2.ini", g_testDataM, true);
-        end     = std::clock();
-        elapsed_secs1 = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;
+        elapsed_secs1 = double(timer.elapsed()) / 1000000.0;
         tests1 = tests;
         tests.clear();
-        begin  = std::clock();
+        timer.restart();
         testIniParser<QSettings, QString>("../example-big-2.ini", g_testDataQ, true);
-        end    = std::clock();
-        elapsed_secs2 = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;
+        elapsed_secs2 = double(timer.elapsed()) / 1000000.0;
         tests2 = tests;
         dumpTests();
-        printf("\nTotal time (big ini, full): My (debug/release): %f, QSettings (release): %f\n\n",
+        printf("\nTotal time (big ini, reading of everything): My (debug/release): %f, QSettings (release): %f\n\n",
                elapsed_secs1,
                elapsed_secs2);
+        fflush(stdout);
         g_testDataM.spit();
         g_testDataQ.spit();
     }
@@ -640,34 +674,33 @@ int main(int argc, char **argv)
     {
         tests2 = tests1;//compare with old functions
         tests.clear();
-        begin   = std::clock();
+        timer.restart();
         testIniParserNEW("../example-big-2.ini", g_testDataM, true);
-        end     = std::clock();
-        elapsed_secs1 = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;
+        elapsed_secs1 = double(timer.elapsed()) / 1000000.0;
         tests1 = tests;
         dumpTests();
         printf("\nTotal time (big ini, full with new functions): My (new): %f, My (old): %f\n\n",
                elapsed_secs1,
                elapsed_secs2);
+        fflush(stdout);
         g_testDataM.spit();
     }
     //
     //Test middle INI
     {
         tests.clear();
-        begin   = std::clock();
+        timer.restart();
         testIniParser<IniProcessing, std::string>("../example-mid.ini", g_testDataM);
-        end     = std::clock();
-        elapsed_secs1 = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;
+        elapsed_secs1 = double(timer.elapsed()) / 1000000.0;
         tests1 = tests;
         tests.clear();
-        begin  = std::clock();
+        timer.restart();
         testIniParser<QSettings, QString>("../example-mid.ini", g_testDataQ);
-        end    = std::clock();
-        elapsed_secs2 = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;
+        elapsed_secs2 = double(timer.elapsed()) / 1000000.0;
         tests2 = tests;
         dumpTests();
         printf("\nTotal time (middle ini): My (debug/release): %f, QSettings (release): %f\n\n", elapsed_secs1, elapsed_secs2);
+        fflush(stdout);
         g_testDataM.spit();
         g_testDataQ.spit();
     }
@@ -675,64 +708,36 @@ int main(int argc, char **argv)
     //Test small INI
     {
         tests.clear();
-        begin   = std::clock();
+        timer.restart();
         testIniParser<IniProcessing, std::string>("../example-tiny.ini", g_testDataM);
-        end     = std::clock();
-        elapsed_secs1 = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;
+        elapsed_secs1 = double(timer.elapsed()) / 1000000.0;
         tests1 = tests;
         tests.clear();
-        begin  = std::clock();
+        timer.restart();
         testIniParser<QSettings, QString>("../example-tiny.ini", g_testDataQ);
-        end    = std::clock();
-        elapsed_secs2 = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;
+        elapsed_secs2 = double(timer.elapsed()) / 1000000.0;
         tests2 = tests;
         dumpTests();
         printf("\nTotal time (tiny ini): My (debug/release): %f, QSettings (release): %f\n\n", elapsed_secs1, elapsed_secs2);
+        fflush(stdout);
         g_testDataM.spit();
         g_testDataQ.spit();
     }
+
     //
-    //Test small INI
+    //Test small INI with "read"
     {
         tests.clear();
-        begin   = std::clock();
+        timer.start();
+        printf("||||||||||||Testing of .read() output|||||||||\n");
         testIniParserNEW("../example-tiny.ini", g_testDataM, false);
-        end     = std::clock();
-        elapsed_secs1 = (double(end - begin) / CLOCKS_PER_SEC) * 1000.0;
+        elapsed_secs1 = double(timer.elapsed()) / 1000000.0;
         tests1 = tests;
-        tests2 = tests;
+        //tests2 = tests;
         dumpTests();
         tests.clear();
     }
 
-    //
-    //Write test
-    {
-        IniProcessing myOutput("writeme.ini");
-
-        myOutput.beginGroup("My-Pets");
-        myOutput.setValue("meow", 45.234);
-        myOutput.setValue("woof", -542);
-        myOutput.setValue("pee", 42);
-        myOutput.setValue("koo", "3.41 It's a string with 34 number!");
-        myOutput.setValue("MY-DIGITS", std::vector<int>({3, -5, 134, 12, 546, 12, 0, -4}));
-        myOutput.setValue("MY-FLOAT", std::vector<double>({0.34,-32561.23,+34e4,-452.21E34,-12,9,1,333,-135e4}));
-        myOutput.endGroup();
-
-        myOutput.beginGroup("My-Chickens");
-        myOutput.setValue("hens", 34);
-        myOutput.setValue("cocks", 1);
-        myOutput.setValue("eggs", 45266);
-        myOutput.setValue("chicks", 46715171257);
-        myOutput.setValue("cost", -15.245);
-        myOutput.setValue("cost2", -15.245346521);
-        myOutput.setValue("result", -11.245e-7);
-        myOutput.endGroup();
-
-        if(!myOutput.writeIniFile())
-            printf("Ouch, can't write this!\n");
-        fflush(stdout);
-    }
     x.quit();
     return 0;
 }
