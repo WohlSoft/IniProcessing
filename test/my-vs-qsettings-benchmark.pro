@@ -14,6 +14,7 @@ QMAKE_CXXFLAGS_RELEASE += -static-libgcc -static-libstdc++
 DESTDIR = $$PWD/bin
 
 #DEFINES += INIDEBUG
+#DEFINE += CASE_SENSITIVE_KEYS
 
 include(iniprocessing.pri)
 
