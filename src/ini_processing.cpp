@@ -532,6 +532,10 @@ IniProcessing::IniProcessing(const IniProcessing &ip) :
 bool IniProcessing::open(const std::string &iniFileName)
 {
     std::setlocale(LC_NUMERIC, "C");
+    std::string prevLocale;
+    char *prevLocaleC = std::setlocale(LC_NUMERIC, "C");
+    if(prevLocaleC)
+        prevLocale.assign(prevLocaleC);
 
     if(!iniFileName.empty())
     {
@@ -539,25 +543,34 @@ bool IniProcessing::open(const std::string &iniFileName)
         m_params.errorCode = ERR_OK;
         m_params.filePath  = iniFileName;
         bool res = parseFile(m_params.filePath.c_str());
-        #ifdef INIDEBUG
 
+#ifdef INIDEBUG
         if(res)
             printf("\n==========WOOHOO!!!==============\n\n");
         else
             printf("\n==========OOOUCH!!!==============\n\n");
+#endif
 
-        #endif
         m_params.opened = res;
+        if(!prevLocale.empty())
+            std::setlocale(LC_NUMERIC, prevLocale.c_str());
         return res;
     }
 
+    if(!prevLocale.empty())
+        std::setlocale(LC_NUMERIC, prevLocale.c_str());
     m_params.errorCode = ERR_NOFILE;
     return false;
 }
 
+}
+#endif
 bool IniProcessing::openMem(char *memory, size_t size)
 {
-    std::setlocale(LC_NUMERIC, "C");
+    std::string prevLocale;
+    char *prevLocaleC = std::setlocale(LC_NUMERIC, "C");
+    if(prevLocaleC)
+        prevLocale.assign(prevLocaleC);
 
     if((memory != nullptr) && (size > 0))
     {
@@ -566,10 +579,16 @@ bool IniProcessing::openMem(char *memory, size_t size)
         m_params.filePath.clear();
         bool res = parseMemory(memory, size);
         m_params.opened = res;
+        if(!prevLocale.empty())
+            std::setlocale(LC_NUMERIC, prevLocale.c_str());
         return res;
     }
 
+    if(!prevLocale.empty())
+        std::setlocale(LC_NUMERIC, prevLocale.c_str());
+
     m_params.errorCode = ERR_NOFILE;
+
     return false;
 }
 
