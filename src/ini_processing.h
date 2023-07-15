@@ -29,6 +29,7 @@
 #include <cstring>
 #include <cstdlib>
 #include <vector>
+#include <map>
 #include <unordered_map>
 #ifdef INI_PROCESSING_ALLOW_QT_TYPES
 #include <QString>
@@ -71,6 +72,8 @@ private:
         bool        modified;
         typedef     std::unordered_map<std::string, std::string> IniKeys;
         typedef     std::unordered_map<std::string, IniKeys> IniSections;
+        typedef     std::map<std::string, std::string> IniKeysOrdered;
+        typedef     std::map<std::string, IniKeysOrdered> IniSectionsOrdered;
         IniSections iniData;
         IniKeys    *currentGroup;
         std::string currentGroupName;

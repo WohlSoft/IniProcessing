@@ -1429,7 +1429,16 @@ bool IniProcessing::writeIniFile()
     if(!cFile)
         return false;
 
+    // Sort the data before to output
+    params::IniSectionsOrdered outData;
     for(auto &group : m_params.iniData)
+    {
+        auto &outKeys = outData[group.first];
+        for(auto &key : group.second)
+            outKeys.insert(key);
+    }
+
+    for(auto &group : outData)
     {
         fprintf(cFile, "[%s]\n", group.first.c_str());
 
