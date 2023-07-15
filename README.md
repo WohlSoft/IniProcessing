@@ -1,8 +1,6 @@
 # IniProcessing
 A small INI file reader and writer which compatible with API of QSettings
 
-[![CircleCI](https://circleci.com/gh/WohlSoft/IniProcessing.svg?style=svg)](https://circleci.com/gh/WohlSoft/IniProcessing)
-
 It has no dependencies and using STL.
 
 * Ready to use code you will find in `./src` folder
@@ -17,4 +15,3 @@ cmake .
 make
 make test
 ```
-
