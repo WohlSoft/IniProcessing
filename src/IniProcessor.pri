@@ -6,5 +6,5 @@ HEADERS += \
     $$PWD/ini_processing_variant.h \
 
 SOURCES += \
-    $$PWD/ini_processing.cpp
-
+    $$PWD/ini_processing.cpp \
+    $$PWD/ini_processing_variant.cpp
