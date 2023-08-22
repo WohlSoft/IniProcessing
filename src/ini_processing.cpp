@@ -1261,7 +1261,8 @@ inline void StrToNumVectorHelper(const std::string &source, TList &dest, const t
         std::string item;
         while(std::getline(ss, item, ','))
         {
-            std::remove(item.begin(), item.end(), ' '); //-V530
+            auto remove_ret = std::remove(item.begin(), item.end(), ' '); //-V530
+            (void)remove_ret;
 
             try
             {
@@ -1857,6 +1858,9 @@ static inline bool isFloatValue(const std::string &str)
 
     for(const char &c : str)
     {
+        if(c < 0 || c > 127)
+            return false; // Totally not a valid part of a floating-point number
+
         if(!isdigit(c))
         {
             switch(st)
