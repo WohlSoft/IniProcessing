@@ -11,7 +11,7 @@ QMAKE_CXXFLAGS_RELEASE += -static-libgcc -static-libstdc++
 DESTDIR = $$PWD/bin
 #DEFINES += INIDEBUG
 
-include(iniprocessing.pri)
+include(../IniProcessor.pri)
 include(catch/catch.pri)
 
 SOURCES += \

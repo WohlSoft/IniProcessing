@@ -2,7 +2,7 @@
 #include <catch/catch.hpp>
 #include <string>
 #include <vector>
-#include <ini_processing.h>
+#include <IniProcessing/ini_processing.h>
 
 
 TEST_CASE( "Field reading validation", "[ini-reading]" )
