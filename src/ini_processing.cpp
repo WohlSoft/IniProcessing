@@ -1921,14 +1921,7 @@ static inline bool isFloatValue(const std::string &str)
 
     for(const char &c : str)
     {
-<<<<<<< HEAD
         if(!isDigit(c))
-=======
-        if(c < 0)
-            return false; // Totally not a valid part of a floating-point number
-
-        if(!isdigit(c))
->>>>>>> f08a6b1a6b0439d16aa2185aff0b953a168a2723
         {
             switch(st)
             {
