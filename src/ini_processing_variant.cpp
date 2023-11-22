@@ -67,7 +67,7 @@ IniProcessingVariant::IniProcessingVariant(const char *data):
 {}
 
 #ifdef INI_PROCESSING_ALLOW_QT_TYPES
-IniProcessingVarian::IniProcessingVariant(const QString &data):
+IniProcessingVariant::IniProcessingVariant(const QString &data):
     m_data(data.toStdString()),
     m_dataP(nullptr)
 {}
