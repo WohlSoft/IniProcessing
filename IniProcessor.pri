@@ -2,8 +2,8 @@
 INCLUDEPATH += $$PWD/include
 
 HEADERS += \
-    $$PWD/include/IniProcessing/ini_processing.h \
-    $$PWD/include/IniProcessing/ini_processing_variant.h \
+    $$PWD/include/IniProcessor/ini_processing.h \
+    $$PWD/include/IniProcessor/ini_processing_variant.h \
 
 SOURCES += \
     $$PWD/src/ini_processing.cpp \

@@ -32,7 +32,7 @@
 #pragma warning (disable : 4244)
 #endif
 
-#include "../include/IniProcessing/ini_processing.h"
+#include "../include/IniProcessor/ini_processing.h"
 #include <cstdio>
 #include <cctype>
 #include <cstdint>

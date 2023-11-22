@@ -32,7 +32,7 @@
 #   include <stringapiset.h>
 #endif
 
-#include "../include/IniProcessing/ini_processing_variant.h"
+#include "../include/IniProcessor/ini_processing_variant.h"
 
 
 std::string &IniProcessingVariant::data()
