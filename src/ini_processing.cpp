@@ -1708,6 +1708,17 @@ IniProcessingVariant IniProcessing::value(const char *key, const IniProcessingVa
     return IniProcessingVariant(&k);
 }
 
+void IniProcessing::clearValue(const char *key)
+{
+    if(m_params.currentGroupName.empty())
+        return;
+
+    bool ok = false;
+    params::IniKeys::iterator e = IniProcessing_readHelper(this, key, ok);
+    if(ok)
+        m_params.currentGroup->erase(e);
+}
+
 void IniProcessing::writeIniParam(const char *key, const std::string &value)
 {
     if(m_params.currentGroupName.empty())

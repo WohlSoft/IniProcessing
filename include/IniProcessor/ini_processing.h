@@ -862,6 +862,8 @@ public:
      */
     IniProcessingVariant value(const char *key, const IniProcessingVariant &defVal = IniProcessingVariant());
 
+    void clearValue(const char *key);
+
     void setValue(const char *key, unsigned short value);
     void setValue(const char *key, short value);
     void setValue(const char *key, unsigned int value);
