@@ -86,17 +86,17 @@ static const unsigned char charTraits[256] =
 
 #if 0//for speed comparison who faster - macro or inline function. Seems speeds are same
 #define IS_SPACE(c) (charTraits[static_cast<unsigned char>(c)] & Space)
-#define IS_SPECIAL(c) (charTraits[static_cast<unsigned char>(c)] & Special)
+// #define IS_SPECIAL(c) (charTraits[static_cast<unsigned char>(c)] & Special)
 #define IS_INIEQUAL(c) (charTraits[static_cast<unsigned char>(c)] & INIParamEq)
 #else
 static inline unsigned char IS_SPACE(char &c)
 {
     return (charTraits[static_cast<unsigned char>(c)] & Space);
 }
-static inline unsigned char IS_SPECIAL(char &c)
-{
-    return (charTraits[static_cast<unsigned char>(c)] & Special);
-}
+// static inline unsigned char IS_SPECIAL(char &c)
+// {
+//     return (charTraits[static_cast<unsigned char>(c)] & Special);
+// }
 static inline unsigned char IS_INIEQUAL(char &c)
 {
     return (charTraits[static_cast<unsigned char>(c)] & INIParamEq);
