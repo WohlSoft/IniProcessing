@@ -550,7 +550,7 @@ bool IniProcessing::parseFile(const char *filename)
     return valid;
 }
 
-bool IniProcessing::parseMemory(char *mem, size_t size)
+bool IniProcessing::parseMemory(const char *mem, size_t size)
 {
     bool valid = true;
     char *tmp = nullptr;
@@ -654,7 +654,7 @@ IniProcessing::IniProcessing(const std::wstring &iniFileName, int) :
 }
 #endif
 
-IniProcessing::IniProcessing(char *memory, size_t size) :
+IniProcessing::IniProcessing(const char *memory, size_t size) :
     m_params
     {
         "", false, -1, ERR_OK, false, params::IniSections(), nullptr, ""
@@ -725,7 +725,7 @@ bool IniProcessing::open(const std::wstring &iniFileName)
 }
 #endif
 
-bool IniProcessing::openMem(char *memory, size_t size)
+bool IniProcessing::openMem(const char *memory, size_t size)
 {
     std::string prevLocale;
     char *prevLocaleC = std::setlocale(LC_NUMERIC, "C");

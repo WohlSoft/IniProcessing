@@ -88,7 +88,7 @@ private:
     bool parseHelper(char *data, size_t size);
 
     bool parseFile(const char *filename);
-    bool parseMemory(char *mem, size_t size);
+    bool parseMemory(const char *mem, size_t size);
 
     friend IniProcessing::params::IniKeys::iterator IniProcessing_readHelper(IniProcessing *self, const char *key, bool &ok);
 
@@ -107,7 +107,7 @@ public:
 #ifdef _WIN32
     IniProcessing(const std::wstring &iniFileName, int dummy = 0);
 #endif
-    IniProcessing(char *memory, size_t size);
+    IniProcessing(const char *memory, size_t size);
     IniProcessing(const IniProcessing &ip);
 
     /**
@@ -127,7 +127,7 @@ public:
      * @param size size of memory block to process
      * @return
      */
-    bool openMem(char *memory, size_t size);
+    bool openMem(const char *memory, size_t size);
 
     /**
      * @brief Clear all internal buffers and close the file
