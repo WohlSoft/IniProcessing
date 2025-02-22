@@ -32,6 +32,12 @@
 #pragma warning (disable : 4244)
 #endif
 
+#ifdef _WIN32
+#   define OS_NEWLINE "\r\n"
+#else
+#   define OS_NEWLINE "\n"
+#endif
+
 #include "../include/IniProcessor/ini_processing.h"
 #include <cstdio>
 #include <cctype>
@@ -2004,14 +2010,14 @@ bool IniProcessing::writeIniFile()
 
     for(auto &group : outData)
     {
-        fprintf(cFile, "[%s]\n", group.first.c_str());
+        fprintf(cFile, "[%s]" OS_NEWLINE, group.first.c_str());
 
         for(auto &key : group.second)
         {
             if(isFloatValue(key.second))
             {
                 //Store as-is without quoting
-                fprintf(cFile, "%s = %s\n", key.first.c_str(), key.second.c_str());
+                fprintf(cFile, "%s = %s" OS_NEWLINE, key.first.c_str(), key.second.c_str());
             }
             else
             {
@@ -2034,11 +2040,11 @@ bool IniProcessing::writeIniFile()
                     }
                 }
 
-                fprintf(cFile, "%s = \"%s\"\n", key.first.c_str(), escaped.c_str());
+                fprintf(cFile, "%s = \"%s\"" OS_NEWLINE, key.first.c_str(), escaped.c_str());
             }
         }
 
-        fprintf(cFile, "\n");
+        fprintf(cFile, OS_NEWLINE);
         fflush(cFile);
     }
 
