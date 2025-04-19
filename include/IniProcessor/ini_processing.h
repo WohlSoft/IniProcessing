@@ -392,6 +392,15 @@ public:
      * @param [_OUT] dest Reference to destination variable to store retrieved value
      * @param [_IN] defVal Default value for case of non-existing key
      */
+    void read(const char *key, std::vector<int> &dest, const std::vector<int> &defVal = std::vector<int>());
+
+#ifndef INI_PROCESSING_USE_MDX_PARSER
+    /**
+     * @brief Retreive value by specific key and pass it via reference
+     * @param [_IN] key name of key with value to retrieved
+     * @param [_OUT] dest Reference to destination variable to store retrieved value
+     * @param [_IN] defVal Default value for case of non-existing key
+     */
     void read(const char *key, std::vector<unsigned short> &dest, const std::vector<unsigned short> &defVal = std::vector<unsigned short>());
     /**
      * @brief Retreive value by specific key and pass it via reference
@@ -407,13 +416,6 @@ public:
      * @param [_IN] defVal Default value for case of non-existing key
      */
     void read(const char *key, std::vector<unsigned int> &dest, const std::vector<unsigned int> &defVal = std::vector<unsigned int>());
-    /**
-     * @brief Retreive value by specific key and pass it via reference
-     * @param [_IN] key name of key with value to retrieved
-     * @param [_OUT] dest Reference to destination variable to store retrieved value
-     * @param [_IN] defVal Default value for case of non-existing key
-     */
-    void read(const char *key, std::vector<int> &dest, const std::vector<int> &defVal = std::vector<int>());
     /**
      * @brief Retreive value by specific key and pass it via reference
      * @param [_IN] key name of key with value to retrieved
@@ -463,6 +465,7 @@ public:
      * @param [_IN] defVal Default value for case of non-existing key
      */
     void read(const char *key, std::vector<long double> &dest, const std::vector<long double> &defVal = std::vector<long double>());
+#endif // #ifndef INI_PROCESSING_USE_MDX_PARSER
 
 #ifdef _WIN32
     /**
@@ -587,6 +590,15 @@ public:
      * @param [_OUT] dest Reference to destination variable to store retrieved value
      * @param [_IN] defVal Default value for case of non-existing key
      */
+    void read(const wchar_t *key, std::vector<int> &dest, const std::vector<int> &defVal = std::vector<int>());
+
+#   ifndef INI_PROCESSING_USE_MDX_PARSER
+    /**
+     * @brief Retreive value by specific key and pass it via reference (UTF-16 version)
+     * @param [_IN] key name of key with value to retrieved
+     * @param [_OUT] dest Reference to destination variable to store retrieved value
+     * @param [_IN] defVal Default value for case of non-existing key
+     */
     void read(const wchar_t *key, std::vector<unsigned short> &dest, const std::vector<unsigned short> &defVal = std::vector<unsigned short>());
     /**
      * @brief Retreive value by specific key and pass it via reference (UTF-16 version)
@@ -602,13 +614,6 @@ public:
      * @param [_IN] defVal Default value for case of non-existing key
      */
     void read(const wchar_t *key, std::vector<unsigned int> &dest, const std::vector<unsigned int> &defVal = std::vector<unsigned int>());
-    /**
-     * @brief Retreive value by specific key and pass it via reference (UTF-16 version)
-     * @param [_IN] key name of key with value to retrieved
-     * @param [_OUT] dest Reference to destination variable to store retrieved value
-     * @param [_IN] defVal Default value for case of non-existing key
-     */
-    void read(const wchar_t *key, std::vector<int> &dest, const std::vector<int> &defVal = std::vector<int>());
     /**
      * @brief Retreive value by specific key and pass it via reference (UTF-16 version)
      * @param [_IN] key name of key with value to retrieved
@@ -658,6 +663,7 @@ public:
      * @param [_IN] defVal Default value for case of non-existing key
      */
     void read(const wchar_t *key, std::vector<long double> &dest, const std::vector<long double> &defVal = std::vector<long double>());
+#   endif // #ifndef INI_PROCESSING_USE_MDX_PARSER
 #endif
 
 #ifdef INI_PROCESSING_ALLOW_QT_TYPES

@@ -45,7 +45,9 @@
 #include <cstring>
 #include <cstdlib>
 #include <clocale>
+#ifndef INI_PROCESSING_USE_MDX_PARSER
 #include <sstream>
+#endif
 #include <algorithm>
 #include <assert.h>
 #ifdef _WIN32
@@ -1318,6 +1320,58 @@ void IniProcessing::read(const char *key, QString &dest, const QString &defVal)
 }
 #endif
 
+#ifdef INI_PROCESSING_USE_MDX_PARSER
+template<class TList>
+void StrToNumVectorHelper(const std::string &source, TList &dest, const typename TList::value_type &def);
+
+const char* MDX_load_int(int& dest, const char* field_data);
+
+template<>
+inline void StrToNumVectorHelper(const std::string &source, std::vector<int> &dest, const int &def)
+{
+    dest.clear();
+
+    if(!source.empty())
+    {
+        const char* cur = source.c_str();
+
+        while(*cur != '\0')
+        {
+            // remove padding
+            while(*cur == ' ')
+                cur++;
+
+            // this could be replaced with something templated if needed
+            int next = def;
+            const char* new_cur = MDX_load_int(next, cur);
+
+            bool found_number = (new_cur != cur);
+            cur = new_cur;
+
+            // remove padding
+            while(*cur == ' ')
+                cur++;
+
+            // successfully parsed
+            if(found_number && (*cur == ',' || *cur == '\0'))
+                dest.push_back(next);
+
+            // skip any garbage
+            while(*cur != ',' && *cur != '\0')
+                cur++;
+
+            // advance past comma
+            if(*cur == ',')
+                cur++;
+        }
+    }
+
+    if(dest.empty())
+        dest.push_back(def);
+}
+
+#else // #ifdef INI_PROCESSING_USE_MDX_PARSER
+
 template<class TList>
 inline void StrToNumVectorHelper(const std::string &source, TList &dest, const typename TList::value_type &def)
 {
@@ -1360,6 +1414,7 @@ inline void StrToNumVectorHelper(const std::string &source, TList &dest, const t
     else
         dest.push_back(def);
 }
+#endif // #ifdef INI_PROCESSING_USE_MDX_PARSER
 
 template<class TList, typename T>
 void readNumArrHelper(IniProcessing *self, const char *key, TList &dest, const TList &defVal)
@@ -1376,6 +1431,11 @@ void readNumArrHelper(IniProcessing *self, const char *key, TList &dest, const T
     StrToNumVectorHelper(e->second, dest, static_cast<T>(0));
 }
 
+void IniProcessing::read(const char *key, std::vector<int> &dest, const std::vector<int> &defVal)
+{
+    readNumArrHelper<std::vector<int>, int>(this, key, dest, defVal);
+}
+#ifndef INI_PROCESSING_USE_MDX_PARSER
 void IniProcessing::read(const char *key, std::vector<unsigned short> &dest, const std::vector<unsigned short> &defVal)
 {
     readNumArrHelper<std::vector<unsigned short>, unsigned short>(this, key, dest, defVal);
@@ -1387,10 +1447,6 @@ void IniProcessing::read(const char *key, std::vector<short> &dest, const std::v
 void IniProcessing::read(const char *key, std::vector<unsigned int> &dest, const std::vector<unsigned int> &defVal)
 {
     readNumArrHelper<std::vector<unsigned int>, unsigned int>(this, key, dest, defVal);
-}
-void IniProcessing::read(const char *key, std::vector<int> &dest, const std::vector<int> &defVal)
-{
-    readNumArrHelper<std::vector<int>, int>(this, key, dest, defVal);
 }
 void IniProcessing::read(const char *key, std::vector<unsigned long> &dest, const std::vector<unsigned long> &defVal)
 {
@@ -1416,11 +1472,11 @@ void IniProcessing::read(const char *key, std::vector<double> &dest, const std::
 {
     readNumArrHelper<std::vector<double>, double>(this, key, dest, defVal);
 }
-
 void IniProcessing::read(const char *key, std::vector<long double> &dest, const std::vector<long double> &defVal)
 {
     readNumArrHelper<std::vector<long double>, long double>(this, key, dest, defVal);
 }
+#endif // #ifndef INI_PROCESSING_USE_MDX_PARSER
 
 #ifdef _WIN32
 void IniProcessing::read(const wchar_t *key, bool &dest, bool defVal)
@@ -1537,6 +1593,13 @@ void IniProcessing::read(const wchar_t *key, std::wstring &dest, const std::wstr
     dest = s_str_to_wstr(e->second);
 }
 
+void IniProcessing::read(const wchar_t *key, std::vector<int> &dest, const std::vector<int> &defVal)
+{
+    std::string key8 = s_wstr_to_str(key);
+    read(key8.c_str(), dest, defVal);
+}
+
+#    ifndef INI_PROCESSING_USE_MDX_PARSER
 void IniProcessing::read(const wchar_t *key, std::vector<unsigned short> &dest, const std::vector<unsigned short> &defVal)
 {
     std::string key8 = s_wstr_to_str(key);
@@ -1550,12 +1613,6 @@ void IniProcessing::read(const wchar_t *key, std::vector<short> &dest, const std
 }
 
 void IniProcessing::read(const wchar_t *key, std::vector<unsigned int> &dest, const std::vector<unsigned int> &defVal)
-{
-    std::string key8 = s_wstr_to_str(key);
-    read(key8.c_str(), dest, defVal);
-}
-
-void IniProcessing::read(const wchar_t *key, std::vector<int> &dest, const std::vector<int> &defVal)
 {
     std::string key8 = s_wstr_to_str(key);
     read(key8.c_str(), dest, defVal);
@@ -1602,6 +1659,7 @@ void IniProcessing::read(const wchar_t *key, std::vector<long double> &dest, con
     std::string key8 = s_wstr_to_str(key);
     read(key8.c_str(), dest, defVal);
 }
+#    endif // #ifndef INI_PROCESSING_USE_MDX_PARSER
 #endif // WIN32
 
 #ifdef INI_PROCESSING_ALLOW_QT_TYPES
