@@ -593,6 +593,8 @@ bool IniProcessing::parseMemory(const char *mem, size_t size)
 
 IniProcessing::params::IniKeys::iterator IniProcessing_readHelper(IniProcessing *self, const char *key, bool &ok)
 {
+    ok = false;
+
     IniProcessing::params &m_params = self->m_params;
 
     if(!m_params.opened)
